@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.2.2 — 2026-08-08 — Email confirmation handoff
+
+GitHub commit: `PENDING`
+
+- Redirected successful email confirmations to login with an “Email verified” notification.
+- Handled expired or already-used confirmation links with a helpful login message.
+- Added compatibility for older confirmation links that land on `/?code=...`.
+
 ## 1.2.1 — 2026-08-08 — Signup entry fix
 
 GitHub commit: [`c1393a2`](https://github.com/rohithsunil/nett-finance-tracker/commit/c1393a2)

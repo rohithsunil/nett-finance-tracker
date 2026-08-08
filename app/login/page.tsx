@@ -17,8 +17,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const requested = new URLSearchParams(window.location.search).get('mode');
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get('mode');
     if (requested === 'signup' || requested === 'reset') setMode(requested);
+
+    const verified = params.get('verified');
+    if (verified === '1') {
+      setMode('login');
+      setMessage('Email verified. You can now sign in to Nett.');
+    } else if (verified === 'error') {
+      setMode('login');
+      setMessage('That confirmation link has expired or was already used. Request a new one if needed.');
+    }
   }, []);
 
   async function submit(event: FormEvent) {

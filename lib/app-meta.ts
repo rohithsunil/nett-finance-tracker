@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.2.1';
+export const APP_VERSION = '1.2.2';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Email confirmation handoff',
+    commit: 'PENDING',
+    summary: 'Email confirmation now returns people to a clear sign-in state instead of the app root.',
+    changes: [
+      'Redirected successful email confirmations to login with an “Email verified” notification.',
+      'Handled expired or already-used confirmation links with a helpful login message.',
+      'Added compatibility for older confirmation links that land on `/?code=...`.',
+    ],
+  },
+  {
+    version: '1.2.1',
     date: RELEASE_DATE,
     title: 'Signup entry fix',
     commit: 'c1393a2',

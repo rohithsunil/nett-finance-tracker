@@ -3,7 +3,18 @@ import NettApp from '@/components/NettApp';
 import ConfigurationRequired from '@/components/ConfigurationRequired';
 import { getSupabaseServer } from '@/lib/supabase/server';
 
-export default async function Home() {
+type HomeProps = {
+  searchParams: Promise<{ code?: string; next?: string }>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  if (params.code) {
+    const callbackParams = new URLSearchParams({ code: params.code });
+    if (params.next?.startsWith('/') && !params.next.startsWith('//')) callbackParams.set('next', params.next);
+    redirect(`/auth/callback?${callbackParams.toString()}`);
+  }
+
   const supabase = await getSupabaseServer();
   if (!supabase) return <ConfigurationRequired />;
 
