@@ -2,7 +2,7 @@
 
 ## 1.4.1 — 2026-08-08 — Country transfer & trust polish
 
-GitHub commit: `pending`
+GitHub commit: [`3902120`](https://github.com/rohithsunil/nett-finance-tracker/commit/3902120)
 
 - Added a dedicated Move country action on every account with a confirmation explaining how linked activity follows the account.
 - Made negative Safe to Spend states explicit instead of presenting them as a normal available balance.

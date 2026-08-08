@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Country transfer & trust polish',
-    commit: 'pending',
+    commit: '3902120',
     summary: 'Nett now makes moving an account between countries explicit, and surfaces financial attention states more honestly.',
     changes: [
       'Added a dedicated Move country action on every account with a confirmation that explains how linked activity will be reclassified.',
