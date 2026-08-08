@@ -32,6 +32,7 @@ export interface Account {
   institution_name?: string | null;
   account_last4?: string | null;
   country_code?: CountryCode | null;
+  logo_url?: string | null;
   notes?: string | null;
   archived?: boolean;
   sort_order?: number;

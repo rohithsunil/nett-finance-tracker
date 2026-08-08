@@ -1,5 +1,15 @@
 # Nett release notes
 
+## 1.4.0 — 2026-08-08 — Country-aware monthly money view
+
+GitHub commit: `pending`
+
+- Added visible FX context with a selectable comparison currency and conversion rate source.
+- Added mobile country, workspace and total-currency controls for UAE, India and combined views.
+- Added month-scoped expense summaries for expenses, income and net cash flow.
+- Added account editing, masked last-four digits, institution details and optional logo URLs.
+- Fixed duplicate mobile headers, safe-area spacing and dark/AMOLED contrast.
+
 ## 1.2.2 — 2026-08-08 — Email confirmation handoff
 
 GitHub commit: [`f5a6220`](https://github.com/rohithsunil/nett-finance-tracker/commit/f5a6220)

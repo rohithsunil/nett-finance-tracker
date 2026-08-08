@@ -6,9 +6,9 @@ import * as XLSX from 'xlsx';
 import {
   ArrowDownLeft, ArrowUpRight, Bell, BriefcaseBusiness, CalendarClock, Check, ChevronDown,
   CircleHelp, CirclePlus, CreditCard, Download, Eye, EyeOff, FileSpreadsheet, Filter, Gauge,
-  GitCommitHorizontal, Home, Landmark, LayoutGrid, LineChart, ListFilter, LockKeyhole, LogIn, Menu, MoreHorizontal,
+  CircleDollarSign, GitCommitHorizontal, Home, Landmark, LayoutGrid, LineChart, ListFilter, LockKeyhole, LogIn, Menu, MoreHorizontal,
   MoveRight, Plus, RefreshCw, Search, Settings2, ShieldCheck, Sparkles, Target, TrendingDown,
-  TrendingUp, Upload, Wallet, X, Zap,
+  Pencil, TrendingUp, Upload, Wallet, X, Zap,
 } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { calculateMetrics, debtProgress, displayAmount, formatCurrency, formatShortDate, hasFxRate, isStale } from '@/lib/finance';
@@ -27,6 +27,17 @@ const navItems: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: 'plan', label: 'Plan', icon: Target },
   { id: 'more', label: 'More', icon: LayoutGrid },
 ];
+
+const currencyOptions = ['AED', 'INR', 'USD', 'EUR', 'GBP'];
+const countryOptions = [
+  { value: 'AE', label: 'UAE', flag: '🇦🇪' },
+  { value: 'IN', label: 'India', flag: '🇮🇳' },
+  { value: 'US', label: 'United States', flag: '🇺🇸' },
+  { value: 'GB', label: 'United Kingdom', flag: '🇬🇧' },
+];
+const countryLabel = (value: string) => countryOptions.find((item) => item.value === value)?.label || value;
+const alternateCurrency = (currency: string) => currency === 'AED' ? 'INR' : 'AED';
+const rateFor = (base: string, quote: string, rates: NettData['fxRates']) => base === quote ? 1 : rates[`${base}_${quote}`] || (rates[`${quote}_${base}`] ? 1 / rates[`${quote}_${base}`] : 0);
 
 const todayText = new Intl.DateTimeFormat('en-AE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 const timeText = (value: string) => new Intl.DateTimeFormat('en-AE', { hour: 'numeric', minute: '2-digit' }).format(new Date(value));
@@ -79,10 +90,28 @@ function MetricCard({ label, value, note, icon, accent }: { label: string; value
   </div>;
 }
 
-function AccountCard({ account, displayCurrency, rates }: { account: Account; displayCurrency: string; rates: NettData['fxRates'] }) {
+function RateContext({ baseCurrency, comparisonCurrency, rates, source, updatedAt, onChange }: { baseCurrency: string; comparisonCurrency: string; rates: NettData['fxRates']; source?: string; updatedAt?: string | null; onChange: (currency: string) => void }) {
+  const rate = rateFor(baseCurrency, comparisonCurrency, rates);
+  return <div className="rate-context" aria-label="Currency conversion rate">
+    <div className="rate-icon"><CircleDollarSign size={16} /></div>
+    <div className="rate-copy"><strong>1 {baseCurrency} = {rate ? formatCurrency(rate, comparisonCurrency, false) : 'Rate unavailable'}</strong><span>{source || 'Nett rate history'}{updatedAt ? ` · updated ${formatShortDate(updatedAt)}` : ''}</span></div>
+    <label className="rate-select"><span>Show in</span><select value={comparisonCurrency} onChange={(event) => onChange(event.target.value)} aria-label="Comparison currency">{currencyOptions.filter((item) => item !== baseCurrency).map((item) => <option key={item}>{item}</option>)}</select></label>
+  </div>;
+}
+
+function AccountLogo({ account, size = 42 }: { account: Account; size?: number }) {
+  const initials = (account.institution_name || account.name || 'A').trim().slice(0, 2).toUpperCase();
+  return <div className="account-logo" style={{ width: size, height: size }} aria-hidden="true">
+    {account.logo_url ? <img src={account.logo_url} alt="" /> : <span>{initials}</span>}
+  </div>;
+}
+
+function AccountCard({ account, displayCurrency: requestedCurrency, rates }: { account: Account; displayCurrency: string; rates: NettData['fxRates'] }) {
+  const displayCurrency = requestedCurrency === account.currency ? alternateCurrency(requestedCurrency) : requestedCurrency;
   const amount = Number(account.estimated_balance ?? account.verified_balance);
   const converted = displayAmount(amount, account.currency, displayCurrency, rates);
   return <div className={`account-card ${account.workspace_id === 'studio' ? 'business' : ''}`}>
+    <AccountLogo account={account} size={34} />
     <div className="account-type"><span>{account.currency}</span><span>{account.type.replace('_', ' ')}</span></div>
     <div className="account-name">{account.name}</div>
     <div className="account-amount">{formatCurrency(amount, account.currency, true)}</div>
@@ -109,6 +138,9 @@ export default function NettApp() {
   const [hidden, setHidden] = useState(false);
   const [workspace, setWorkspace] = useState('everything');
   const [country, setCountry] = useState('all');
+  const [comparisonCurrency, setComparisonCurrency] = useState('INR');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [theme, setTheme] = useState<Theme>('system');
@@ -135,6 +167,10 @@ export default function NettApp() {
     investments: scopedBase.investments.filter((item) => (item.country_code || 'AE') === country),
     commitments: scopedBase.commitments.filter((item) => (item.country_code || 'AE') === country),
     reserves: scopedBase.reserves.filter((item) => (item.country_code || 'AE') === country),
+    transactions: scopedBase.transactions.filter((item) => {
+      const linkedAccount = scopedBase.accounts.find((account) => account.id === item.account_id);
+      return (linkedAccount?.country_code || 'AE') === country;
+    }),
   };
   const metrics = useMemo(() => calculateMetrics(scoped.accounts, scoped.debts, scoped.receivables, scoped.investments, scoped.commitments, scoped.reserves, displayCurrency, data.fxRates), [scoped.accounts, scoped.debts, scoped.receivables, scoped.investments, scoped.commitments, scoped.reserves, displayCurrency, data.fxRates]);
   const staleAccounts = scoped.accounts.filter((item) => isStale(item.balance_verified_at, data.profile.freshness_days)).length;
@@ -147,10 +183,17 @@ export default function NettApp() {
   useEffect(() => {
     const saved = window.localStorage.getItem('nett-theme') as Theme | null;
     if (saved && ['light', 'dark', 'amoled', 'system'].includes(saved)) setTheme(saved);
+    const savedComparison = window.localStorage.getItem('nett-comparison-currency');
+    if (savedComparison && currencyOptions.includes(savedComparison)) setComparisonCurrency(savedComparison);
     const params = new URLSearchParams(window.location.search);
     const initialTab = params.get('tab') as Tab | null;
     if (initialTab && navItems.some((item) => item.id === initialTab)) setTab(initialTab);
   }, []);
+
+  useEffect(() => {
+    if (comparisonCurrency === displayCurrency) setComparisonCurrency(alternateCurrency(displayCurrency));
+    window.localStorage.setItem('nett-comparison-currency', comparisonCurrency);
+  }, [comparisonCurrency, displayCurrency]);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -219,18 +262,26 @@ export default function NettApp() {
     setTheme(nextTheme); notify(`Theme changed to ${nextTheme}.`);
   }
 
-  async function createAccount(form: HTMLFormElement) {
+  async function saveAccount(form: HTMLFormElement) {
     const formData = new FormData(form);
-    const item: Account = { id: crypto.randomUUID(), workspace_id: String(formData.get('workspace_id')), name: String(formData.get('name')).trim(), type: String(formData.get('type')), currency: String(formData.get('currency')), verified_balance: Number(formData.get('balance')), estimated_balance: Number(formData.get('balance')), balance_verified_at: new Date().toISOString(), include_net_worth: formData.get('include_net_worth') !== 'false', include_liquidity: formData.get('include_liquidity') !== 'false', institution_name: String(formData.get('institution_name') || '').trim() || null, account_last4: String(formData.get('account_last4') || '').trim() || null, country_code: String(formData.get('country_code') || 'AE') };
+    const accountId = String(formData.get('id') || '') || crypto.randomUUID();
+    const last4 = String(formData.get('account_last4') || '').trim() || null;
+    if (last4 && !/^\d{4}$/.test(last4)) { notify('Last 4 digits must contain exactly four numbers.'); return; }
+    const previous = data.accounts.find((account) => account.id === accountId);
+    const balance = Number(formData.get('balance'));
+    const item: Account = { id: accountId, workspace_id: String(formData.get('workspace_id')), name: String(formData.get('name')).trim(), type: String(formData.get('type')), currency: String(formData.get('currency')), verified_balance: balance, estimated_balance: balance, balance_verified_at: new Date().toISOString(), include_net_worth: formData.get('include_net_worth') !== 'false', include_liquidity: formData.get('include_liquidity') !== 'false', institution_name: String(formData.get('institution_name') || '').trim() || null, account_last4: last4, country_code: String(formData.get('country_code') || 'AE'), logo_url: String(formData.get('logo_url') || '').trim() || null, notes: previous?.notes || null };
     const supabase = getSupabaseBrowser();
     if (supabase && session) {
-      const accountPayload = { user_id: session.userId, workspace_id: item.workspace_id, name: item.name, type: item.type, currency: item.currency, verified_balance: item.verified_balance, estimated_balance: item.estimated_balance, balance_verified_at: item.balance_verified_at, include_net_worth: item.include_net_worth, include_liquidity: item.include_liquidity, institution_name: item.institution_name, account_last4: item.account_last4, country_code: item.country_code };
-      const legacyPayload = { ...accountPayload, institution_name: undefined, account_last4: undefined, country_code: undefined, notes: JSON.stringify({ nett_account_metadata: { institution_name: item.institution_name, account_last4: item.account_last4, country_code: item.country_code } }) };
-      const { error } = await insertWithLegacyFallback(supabase, 'accounts', accountPayload, legacyPayload);
-      if (error) { notify(`Could not save account: ${error.message}`); return; }
+      const accountPayload = { id: item.id, user_id: session.userId, workspace_id: item.workspace_id, name: item.name, type: item.type, currency: item.currency, verified_balance: item.verified_balance, estimated_balance: item.estimated_balance, balance_verified_at: item.balance_verified_at, include_net_worth: item.include_net_worth, include_liquidity: item.include_liquidity, institution_name: item.institution_name, account_last4: item.account_last4, country_code: item.country_code, logo_url: item.logo_url };
+      const legacyPayload = { ...accountPayload, institution_name: undefined, account_last4: undefined, country_code: undefined, logo_url: undefined, notes: JSON.stringify({ nett_account_metadata: { institution_name: item.institution_name, account_last4: item.account_last4, country_code: item.country_code, logo_url: item.logo_url } }) };
+      const result = previous ? await supabase.from('accounts').update(accountPayload).eq('id', item.id).eq('user_id', session.userId) : await insertWithLegacyFallback(supabase, 'accounts', accountPayload, legacyPayload);
+      if (result.error && isMissingFinancialMigration(result.error)) {
+        const fallback = previous ? await supabase.from('accounts').update(legacyPayload).eq('id', item.id).eq('user_id', session.userId) : await supabase.from('accounts').insert(legacyPayload);
+        if (fallback.error) { notify(`Could not save account: ${fallback.error.message}`); return; }
+      } else if (result.error) { notify(`Could not save account: ${result.error.message}`); return; }
     }
-    setData((current) => ({ ...current, accounts: [...current.accounts, item] }));
-    setModal(null); notify(`${item.name} added to Nett.`);
+    setData((current) => ({ ...current, accounts: previous ? current.accounts.map((account) => account.id === item.id ? item : account) : [...current.accounts, item] }));
+    setModal(null); setEditingAccount(null); notify(previous ? `${item.name} updated.` : `${item.name} added to Nett.`);
   }
 
   async function importAccounts(items: Account[]) {
@@ -416,16 +467,22 @@ export default function NettApp() {
       {session ? <div className="user-chip"><div className="avatar">{displayName(data.profile.full_name).slice(0, 1)}</div><div><strong style={{ color: 'var(--ink)', fontSize: 12 }}>{displayName(data.profile.full_name)}</strong><div style={{ fontSize: 10 }}>{session.email || 'Private account'}</div></div></div> : <button className="nav-button" onClick={() => window.location.href = '/login'}><LogIn size={17} /><span className="nav-caption">Sign in</span></button>}
     </aside>
     <main className="main">
-      <header className="topbar"><div><div className="mobile-context"><span className="workspace-dot" />{workspace === 'everything' ? 'Everything' : data.workspaces.find((item) => item.id === workspace)?.name || 'Personal'}<span>·</span><span>{country === 'all' ? 'All countries' : country}</span></div><h1>{tab === 'home' ? `${greeting}, ${displayName(data.profile.full_name)}.` : navItems.find((item) => item.id === tab)?.label}</h1><p>{tab === 'home' ? `${todayText} · ${country === 'all' ? 'All countries' : country} · ${displayCurrency}` : 'A clearer view of what you have, owe and plan.'}</p></div><div className="top-actions"><button className="soft-button" onClick={() => setModal('checkin')}><RefreshCw size={15} /> Update everything</button><button className="icon-button" aria-label="Notifications" onClick={enableNotifications}><Bell size={17} /></button><button className="icon-button" aria-label="Search" onClick={() => setTab('activity')}><Search size={17} /></button></div></header>
+      <header className={`topbar ${tab === 'home' ? '' : 'topbar-page'}`}><div><div className="mobile-context"><span className="workspace-dot" />{workspace === 'everything' ? 'Everything' : data.workspaces.find((item) => item.id === workspace)?.name || 'Personal'}<span>·</span><span>{country === 'all' ? 'All countries' : countryLabel(country)}</span></div><h1>{tab === 'home' ? `${greeting}, ${displayName(data.profile.full_name)}.` : navItems.find((item) => item.id === tab)?.label}</h1><p>{tab === 'home' ? `${todayText} · ${country === 'all' ? 'All countries' : countryLabel(country)} · ${displayCurrency}` : 'A clearer view of what you have, owe and plan.'}</p></div><div className="top-actions"><button className="soft-button" onClick={() => setModal('checkin')}><RefreshCw size={15} /> Update everything</button><button className="icon-button" aria-label="Notifications" onClick={enableNotifications}><Bell size={17} /></button><button className="icon-button" aria-label="Search" onClick={() => setTab('activity')}><Search size={17} /></button></div></header>
       {!session && <div className="demo-bar"><span><span className="demo-dot" /> Demo mode · your private Supabase account is not signed in</span><button className="soft-button" onClick={() => window.location.href = '/login'}><LogIn size={13} /> Sign in to save</button></div>}
-      {tab === 'home' && <HomeView data={scoped} metrics={metrics} hidden={hidden} setHidden={setHidden} staleAccounts={staleAccounts} onQuick={(next) => setModal(next)} workspace={workspace} displayCurrency={displayCurrency} notify={notify} />}
-      {tab === 'accounts' && <AccountsViewV2 data={scoped} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} />}
-      {tab === 'activity' && <ActivityViewV2 data={scoped} displayCurrency={displayCurrency} search={search} setSearch={setSearch} onQuick={(next) => setModal(next)} />}
+      <RateContext baseCurrency={displayCurrency} comparisonCurrency={comparisonCurrency} rates={data.fxRates} source={data.fxRateSource} updatedAt={data.fxRatesUpdatedAt} onChange={setComparisonCurrency} />
+      <div className="mobile-context-controls" aria-label="View context">
+        <label><span>Workspace</span><select value={workspace} onChange={(event) => setWorkspace(event.target.value)}><option value="everything">Everything</option>{data.workspaces.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
+        <label><span>Country</span><select value={country} onChange={(event) => setCountry(event.target.value)}><option value="all">All countries</option>{countryOptions.map((item) => <option value={item.value} key={item.value}>{item.flag} {item.label}</option>)}</select></label>
+        <label><span>Totals in</span><select value={displayCurrency} onChange={(event) => void updateDisplayCurrency(event.target.value)}>{currencyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+      </div>
+      {tab === 'home' && <HomeView data={scoped} metrics={metrics} hidden={hidden} setHidden={setHidden} staleAccounts={staleAccounts} onQuick={(next) => setModal(next)} workspace={workspace} displayCurrency={displayCurrency} comparisonCurrency={comparisonCurrency} notify={notify} />}
+      {tab === 'accounts' && <AccountsViewV3 data={scoped} displayCurrency={comparisonCurrency} onQuick={(next) => setModal(next)} onEdit={(account) => { setEditingAccount(account); setModal('account'); }} />}
+      {tab === 'activity' && <ActivityViewV3 data={scoped} displayCurrency={displayCurrency} country={country} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} search={search} setSearch={setSearch} onQuick={(next) => setModal(next)} />}
       {tab === 'plan' && <PlanViewV2 data={scoped} metrics={metrics} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} whatIf={whatIf} setWhatIf={setWhatIf} whatIfResult={whatIfResult} runWhatIf={runWhatIf} />}
       {tab === 'more' && <MoreView data={data} theme={theme} setTheme={updateTheme} pushEnabled={pushEnabled} enableNotifications={enableNotifications} exportData={exportData} exportCsv={exportCsv} exportXlsx={exportXlsx} session={!!session} onQuick={(next) => setModal(next)} />}
     </main>
     <button className="mobile-quick-add" aria-label="Quick add" onClick={() => setModal('transaction')}><Plus size={22} /></button><nav className="mobile-nav">{navItems.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}><Icon size={17} /><span>{label}</span></button>)}</nav>
-    {modal === 'account' && <AccountModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createAccount} />}
+    {modal === 'account' && <AccountModal account={editingAccount} workspaces={data.workspaces} onClose={() => { setModal(null); setEditingAccount(null); }} onSave={saveAccount} />}
     {modal === 'transaction' && <TransactionModalV2 accounts={data.accounts} spaces={data.spaces} onClose={() => setModal(null)} onSave={createTransaction} />}
     {modal === 'transfer' && <TransferModal accounts={data.accounts} onClose={() => setModal(null)} onSave={createTransfer} />}
     {modal === 'checkin' && <CheckInModal accounts={data.accounts} onClose={() => setModal(null)} onSave={saveCheckin} />}
@@ -448,7 +505,7 @@ function LoadingState() {
   return <main className="loading-shell"><NettLogo priority /><div className="loading-pulse">Preparing your private workspace…</div></main>;
 }
 
-function HomeView({ data, metrics, hidden, setHidden, staleAccounts, onQuick, workspace, displayCurrency, notify }: { data: NettData; metrics: ReturnType<typeof calculateMetrics>; hidden: boolean; setHidden: (value: boolean) => void; staleAccounts: number; onQuick: (modal: Modal) => void; workspace: string; displayCurrency: string; notify: (message: string) => void }) {
+function HomeView({ data, metrics, hidden, setHidden, staleAccounts, onQuick, workspace, displayCurrency, comparisonCurrency, notify }: { data: NettData; metrics: ReturnType<typeof calculateMetrics>; hidden: boolean; setHidden: (value: boolean) => void; staleAccounts: number; onQuick: (modal: Modal) => void; workspace: string; displayCurrency: string; comparisonCurrency: string; notify: (message: string) => void }) {
   if (!data.accounts.length) return <div className="empty-home"><div className="empty-home-icon"><Wallet size={23} /></div><div className="eyebrow"><Sparkles size={13} /> Your private workspace is ready</div><h2>Start with one real account.</h2><p>Add your first balance and Nett will turn it into a calm, useful picture. You can add debts, commitments and activity whenever you’re ready.</p><button className="primary-button" onClick={() => window.location.href = '/onboarding'}>Complete setup <ChevronDown size={15} style={{ transform: 'rotate(-90deg)' }} /></button><button className="empty-home-link" onClick={() => onQuick('account')}>I’m ready to add an account manually</button></div>;
   const maxReserve = Math.max(metrics.liquidCash, 1); const safePercent = Math.min(100, Math.max(0, metrics.safeToSpend / maxReserve * 100));
   return <>
@@ -461,6 +518,16 @@ function HomeView({ data, metrics, hidden, setHidden, staleAccounts, onQuick, wo
   </>;
 }
 
+function AccountsViewV3({ data, displayCurrency, onQuick, onEdit }: { data: NettData; displayCurrency: string; onQuick: (modal: Modal) => void; onEdit: (account: Account) => void }) {
+  const cards = data.accounts.filter((item) => item.type === 'credit_card').map((account) => ({ account, card: data.creditCards.find((item) => item.account_id === account.id) }));
+  return <div className="page-panel">
+    <div className="view-header"><div><h2>Accounts & cards</h2><p>Your balances, bank details and conversion context in one place.</p></div><div className="action-row"><button className="soft-button" onClick={() => onQuick('transfer')}><MoveRight size={15} /> Move money</button><button className="primary-button" onClick={() => onQuick('account')}><Plus size={16} /> Add account</button></div></div>
+    <div className="card full-card"><div className="account-detail-grid">{data.accounts.map((account) => <div className="account-detail-card" key={account.id}><div className="account-detail-top"><div className="account-heading"><AccountLogo account={account} size={38} /><div><div className="account-detail-name">{account.name}</div><div className="table-muted">{account.institution_name || 'Personal account'} · {account.type.replace('_', ' ')}</div></div></div><span className={`pill ${isStale(account.balance_verified_at, data.profile.freshness_days) ? 'warn' : 'good'}`}>{isStale(account.balance_verified_at, data.profile.freshness_days) ? 'Update needed' : 'Verified'}</span></div><div className="table-muted account-meta-line">{account.country_code || 'AE'} · {account.currency}{account.account_last4 ? ` · •••• ${account.account_last4}` : ''}</div><div className="account-detail-balance">{formatCurrency(Number(account.estimated_balance ?? account.verified_balance), account.currency)}</div><div className="table-muted">≈ {formatCurrency(displayAmount(Number(account.estimated_balance ?? account.verified_balance), account.currency, displayCurrency, data.fxRates), displayCurrency)} · 1 {account.currency} = {rateFor(account.currency, displayCurrency, data.fxRates) ? formatCurrency(rateFor(account.currency, displayCurrency, data.fxRates), displayCurrency) : '—'}</div><div className="account-detail-actions"><span className="pill">{account.include_net_worth ? 'In net worth' : 'Excluded'}</span><span className="pill">{account.include_liquidity ? 'Liquid' : 'Not liquid'}</span><button className="edit-account-button" onClick={() => onEdit(account)}><Pencil size={13} /> Edit</button></div></div>)}</div>{!data.accounts.length && <div className="empty-state"><Wallet size={20} /><strong>Your accounts will appear here</strong><span>Add current accounts, cash, wallets or credit cards.</span></div>}</div>
+    {cards.length > 0 && <section className="card full-card"><div className="card-header" style={{ padding: 0 }}><div><h2 className="card-title">Credit cards</h2><div className="card-meta">Outstanding, utilisation and payment due dates</div></div><CreditCard size={17} color="#b16e9b" /></div><div className="card-list">{cards.map(({ account, card }) => <div className="settings-row" key={account.id}><div className="activity-avatar"><CreditCard size={16} /></div><main><strong>{account.name}</strong><small>{card ? `${formatCurrency(Number(card.current_outstanding), account.currency)} outstanding · due ${card.payment_due_date ? formatShortDate(card.payment_due_date) : 'date not set'}` : 'Add card details to track utilisation and due dates.'}</small></main><span className="pill warn">{card?.credit_limit ? `${Math.round(Number(card.current_outstanding) / Number(card.credit_limit) * 100)}% used` : 'Details needed'}</span></div>)}</div></section>}
+    <section className="card full-card"><div className="card-header" style={{ padding: 0 }}><div><h2 className="card-title">Spaces</h2><div className="card-meta">Purpose-led mini-ledgers for goals and budgets</div></div><button className="view-link" onClick={() => onQuick('space')}><Plus size={13} /> Add Space</button></div>{data.spaces.length ? <div className="space-grid">{data.spaces.map((space) => <div className="space-card" key={space.id} style={{ borderTopColor: space.color }}><strong>{space.name}</strong><small>{space.currency}</small><div className="space-amount">{formatCurrency(Number(space.allocation || 0), space.currency)} <span>/ {formatCurrency(Number(space.budget || 0), space.currency)}</span></div></div>)}</div> : <div className="empty-state compact"><Target size={20} /><strong>No Spaces yet</strong><span>Create one for rent, travel, taxes or a goal.</span></div>}</section>
+  </div>;
+}
+
 function AccountsViewV2({ data, displayCurrency, onQuick }: { data: NettData; displayCurrency: string; onQuick: (modal: Modal) => void }) {
   const cards = data.accounts.filter((item) => item.type === 'credit_card').map((account) => ({ account, card: data.creditCards.find((item) => item.account_id === account.id) }));
   return <div className="page-panel"><div className="view-header"><div><h2>Accounts & cards</h2><p>Every balance, account detail and due date in one place.</p></div><div className="action-row"><button className="soft-button" onClick={() => onQuick('transfer')}><MoveRight size={15} /> Move money</button><button className="primary-button" onClick={() => onQuick('account')}><Plus size={16} /> Add account</button></div></div><div className="card full-card"><div className="account-detail-grid">{data.accounts.map((account) => <div className="account-detail-card" key={account.id}><div className="account-detail-top"><span className="pill">{account.country_code || 'AE'}</span><span className={`pill ${isStale(account.balance_verified_at, data.profile.freshness_days) ? 'warn' : 'good'}`}>{isStale(account.balance_verified_at, data.profile.freshness_days) ? 'Update needed' : 'Verified'}</span></div><div className="account-detail-name">{account.name}</div><div className="table-muted">{account.institution_name || 'Personal account'} · {account.type.replace('_', ' ')} · {account.currency}</div><div className="account-detail-balance">{formatCurrency(Number(account.estimated_balance ?? account.verified_balance), account.currency)}</div><div className="table-muted">≈ {formatCurrency(displayAmount(Number(account.estimated_balance ?? account.verified_balance), account.currency, displayCurrency, data.fxRates), displayCurrency)}{account.account_last4 ? ` · •••• ${account.account_last4}` : ''}</div><div className="account-detail-actions"><span className="pill">{account.include_net_worth ? 'In net worth' : 'Excluded'}</span><span className="pill">{account.include_liquidity ? 'Liquid' : 'Not liquid'}</span></div></div>)}</div>{!data.accounts.length && <div className="empty-state"><Wallet size={20} /><strong>Your accounts will appear here</strong><span>Add current accounts, cash, wallets or credit cards.</span></div>}</div>{cards.length > 0 && <section className="card full-card"><div className="card-header" style={{ padding: 0 }}><div><h2 className="card-title">Credit cards</h2><div className="card-meta">Outstanding, utilisation and payment due dates</div></div><CreditCard size={17} color="#b16e9b" /></div><div className="card-list">{cards.map(({ account, card }) => <div className="settings-row" key={account.id}><div className="activity-avatar"><CreditCard size={16} /></div><main><strong>{account.name}</strong><small>{card ? `${formatCurrency(Number(card.current_outstanding), account.currency)} outstanding · due ${card.payment_due_date ? formatShortDate(card.payment_due_date) : 'date not set'}` : 'Add card details to track utilisation and due dates.'}</small></main><span className="pill warn">{card?.credit_limit ? `${Math.round(Number(card.current_outstanding) / Number(card.credit_limit) * 100)}% used` : 'Details needed'}</span></div>)}</div></section>}<section className="card full-card"><div className="card-header" style={{ padding: 0 }}><div><h2 className="card-title">Spaces</h2><div className="card-meta">Purpose-led mini-ledgers for goals and budgets</div></div><button className="view-link" onClick={() => onQuick('space')}><Plus size={13} /> Add Space</button></div>{data.spaces.length ? <div className="space-grid">{data.spaces.map((space) => <div className="space-card" key={space.id} style={{ borderTopColor: space.color }}><strong>{space.name}</strong><small>{space.workspace_id === data.workspaces[0]?.id ? data.workspaces[0]?.name : 'Workspace'} · {space.currency}</small><div className="space-amount">{formatCurrency(Number(space.allocation || 0), space.currency)} <span>/ {formatCurrency(Number(space.budget || 0), space.currency)}</span></div></div>)}</div> : <div className="empty-state compact"><Target size={20} /><strong>No Spaces yet</strong><span>Create one for rent, travel, taxes or a goal.</span></div>}</section></div>;
@@ -468,6 +535,20 @@ function AccountsViewV2({ data, displayCurrency, onQuick }: { data: NettData; di
 
 function AccountsView({ data, displayCurrency, onQuick }: { data: NettData; displayCurrency: string; onQuick: (modal: Modal) => void }) {
   return <div className="page-panel"><div className="view-header"><div><h2>Accounts & cards</h2><p>Every real balance, with verified and estimated states kept clear.</p></div><button className="primary-button" onClick={() => onQuick('account')}><Plus size={16} /> Add account</button></div><div className="card full-card"><div className="table-head"><span>Account</span><span>Balance</span><span>Freshness</span><span>Context</span></div>{data.accounts.map((account) => <div className="table-row" key={account.id}><div><div className="table-strong">{account.name}</div><div className="table-muted">{account.currency} · {account.type.replace('_', ' ')}</div></div><div><div className="table-strong">{formatCurrency(Number(account.estimated_balance ?? account.verified_balance), account.currency)}</div><div className="table-muted">≈ {formatCurrency(displayAmount(Number(account.estimated_balance ?? account.verified_balance), account.currency, displayCurrency, data.fxRates), displayCurrency)}</div></div><div><span className={`pill ${isStale(account.balance_verified_at, 31) ? 'warn' : 'good'}`}>{isStale(account.balance_verified_at, 31) ? 'Update needed' : 'Verified'}</span></div><div><span className="pill">{account.workspace_id === 'studio' ? 'Business' : 'Personal'}</span></div></div>)}<div className="empty-state" style={{ paddingBottom: 28 }}><CreditCard size={20} /><strong>Cards connect to the same picture</strong><span>Add a credit card to see limit, utilization and due dates here.</span><br /><button className="view-link" style={{ marginTop: 8 }} onClick={() => onQuick('account')}>Add a card</button></div></div></div>;
+}
+
+function ActivityViewV3({ data, displayCurrency, country, selectedMonth, setSelectedMonth, search, setSearch, onQuick }: { data: NettData; displayCurrency: string; country: string; selectedMonth: string; setSelectedMonth: (value: string) => void; search: string; setSearch: (value: string) => void; onQuick: (modal: Modal) => void }) {
+  const query = search.toLowerCase();
+  const monthKey = selectedMonth || new Date().toISOString().slice(0, 7);
+  const monthTransactions = data.transactions.filter((item) => item.occurred_at.slice(0, 7) === monthKey);
+  const expenses = monthTransactions.filter((item) => item.type === 'debit').reduce((sum, item) => sum + displayAmount(Number(item.amount), item.currency, displayCurrency, data.fxRates), 0);
+  const income = monthTransactions.filter((item) => item.type === 'credit').reduce((sum, item) => sum + displayAmount(Number(item.amount), item.currency, displayCurrency, data.fxRates), 0);
+  const filtered = monthTransactions.filter((item) => `${item.category || ''} ${item.description || ''} ${item.currency} ${item.type}`.toLowerCase().includes(query));
+  return <div className="page-panel">
+    <div className="view-header"><div><h2>Activity</h2><p>Track this month’s expenses by country, currency and account.</p></div><div className="action-row"><label className="month-picker"><span>Month</span><input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} /></label><button className="soft-button" onClick={() => onQuick('transfer')}><MoveRight size={15} /> Transfer</button><button className="primary-button" onClick={() => onQuick('transaction')}><Plus size={15} /> Add expense</button></div></div>
+    <div className="stats-grid month-stats"><MetricCard label="Expenses" value={expenses} note={`${monthTransactions.filter((item) => item.type === 'debit').length} entries · selected country`} icon={<TrendingDown size={14} />} accent="#cb6e83" /><MetricCard label="Income" value={income} note={`${monthTransactions.filter((item) => item.type === 'credit').length} entries`} icon={<TrendingUp size={14} />} accent="#5b9c9b" /><MetricCard label="Net cash flow" value={income - expenses} note={`After expenses · ${displayCurrency}`} icon={<CircleDollarSign size={14} />} /></div>
+    <section className="card full-card"><div className="month-summary-bar"><div><strong>{new Intl.DateTimeFormat('en-AE', { month: 'long', year: 'numeric' }).format(new Date(`${monthKey}-01T12:00:00`))}</strong><span>{data.accounts.length ? `${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'} · ${country === 'all' ? 'All countries' : countryLabel(country)}` : 'No accounts in this view'}</span></div><div className="month-summary-value">{formatCurrency(expenses, displayCurrency)}<small> expenses</small></div></div><div className="search-row"><div className="search-field"><Search size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search groceries, salary, transfer…" /></div></div>{filtered.length ? <div className="activity-list">{filtered.map((item) => <ActivityRow key={item.id} transaction={item} displayCurrency={displayCurrency} rates={data.fxRates} />)}</div> : <div className="empty-state"><Search size={21} /><strong>No expenses recorded for this month</strong><span>Choose a country above, then tap Add expense to record groceries, travel, rent or anything else.</span><button className="primary-button" style={{ marginTop: 16 }} onClick={() => onQuick('transaction')}><Plus size={15} /> Add this month’s expense</button></div>}</section>
+  </div>;
 }
 
 function ActivityViewV2({ data, displayCurrency, search, setSearch, onQuick }: { data: NettData; displayCurrency: string; search: string; setSearch: (value: string) => void; onQuick: (modal: Modal) => void }) {
@@ -495,7 +576,28 @@ function MoreView({ data, theme, setTheme, pushEnabled, enableNotifications, exp
 
 function ModalShell({ title, description, children, onClose }: { title: string; description: string; children: React.ReactNode; onClose: () => void }) { return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal"><div className="modal-header"><div><h3>{title}</h3><p>{description}</p></div><button className="icon-button" onClick={onClose} aria-label="Close"><X size={16} /></button></div>{children}</div></div>; }
 
-function AccountModal({ workspaces, onClose, onSave }: { workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title="Add an account" description="Store only the details that help you recognise the balance. Full account numbers never belong in Nett." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label className="full-span">Account name<input name="name" required placeholder="Everyday AED" /></label><label>Type<select name="type" defaultValue="current"><option value="current">Current account</option><option value="savings">Savings</option><option value="cash">Cash</option><option value="wallet">Wallet</option><option value="business_bank">Business bank</option><option value="credit_card">Credit card</option></select></label><label>Currency<select name="currency" defaultValue="AED"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label><label>Bank / institution<input name="institution_name" placeholder="Emirates NBD" /></label><label>Last 4 digits<input name="account_last4" inputMode="numeric" maxLength={4} pattern="[0-9]{4}" placeholder="1234" /></label><label>Country<select name="country_code" defaultValue="AE"><option value="AE">UAE</option><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option></select></label><label>Workspace<select name="workspace_id" defaultValue={workspaces[0]?.id}>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Verified balance<input name="balance" type="number" step="0.01" required placeholder="0.00" /></label><label className="check-row"><input type="checkbox" name="include_net_worth" defaultChecked /> Include in net worth</label><label className="check-row"><input type="checkbox" name="include_liquidity" defaultChecked /> Include in liquid cash</label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> Save account</button></div></form></ModalShell>; }
+function AccountModal({ account, workspaces, onClose, onSave }: { account: Account | null; workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
+  return <ModalShell title={account ? 'Edit account' : 'Add an account'} description="Keep recognition details useful and private. Full account numbers never belong in Nett." onClose={onClose}>
+    <form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}>
+      {account && <input type="hidden" name="id" value={account.id} />}
+      <div className="account-logo-editor"><AccountLogo account={account || { id: 'new', name: 'New account', institution_name: null, workspace_id: '', type: 'current', currency: 'AED', verified_balance: 0, include_net_worth: true, include_liquidity: true }} size={52} /><div><strong>{account ? 'Account identity' : 'Add a recognizable account'}</strong><p>Use a logo image URL if you have one, otherwise Nett uses initials.</p></div></div>
+      <div className="form-grid">
+        <label className="full-span">Account name<input name="name" required defaultValue={account?.name || ''} placeholder="Everyday AED" /></label>
+        <label>Type<select name="type" defaultValue={account?.type || 'current'}><option value="current">Current account</option><option value="savings">Savings</option><option value="cash">Cash</option><option value="wallet">Wallet</option><option value="business_bank">Business bank</option><option value="credit_card">Credit card</option></select></label>
+        <label>Currency<select name="currency" defaultValue={account?.currency || 'AED'}>{currencyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Bank / institution<input name="institution_name" defaultValue={account?.institution_name || ''} placeholder="Wio, Emirates NBD" /></label>
+        <label>Last 4 digits<input name="account_last4" inputMode="numeric" maxLength={4} pattern="[0-9]{4}" defaultValue={account?.account_last4 || ''} placeholder="1234" /></label>
+        <label>Country<select name="country_code" defaultValue={account?.country_code || 'AE'}>{countryOptions.map((item) => <option value={item.value} key={item.value}>{item.flag} {item.label}</option>)}</select></label>
+        <label className="full-span">Logo image URL <span className="field-hint">optional</span><input name="logo_url" type="url" defaultValue={account?.logo_url || ''} placeholder="https://…/bank-logo.png" /></label>
+        <label>Workspace<select name="workspace_id" defaultValue={account?.workspace_id || workspaces[0]?.id}>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label>Verified balance<input name="balance" type="number" step="0.01" required defaultValue={account?.estimated_balance ?? account?.verified_balance ?? ''} placeholder="0.00" /></label>
+        <label className="check-row"><input type="checkbox" name="include_net_worth" value="true" defaultChecked={account?.include_net_worth ?? true} /> Include in net worth</label>
+        <label className="check-row"><input type="checkbox" name="include_liquidity" value="true" defaultChecked={account?.include_liquidity ?? true} /> Include in liquid cash</label>
+      </div>
+      <div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> {account ? 'Save changes' : 'Save account'}</button></div>
+    </form>
+  </ModalShell>;
+}
 
 function TransactionModalV2({ accounts, spaces, onClose, onSave }: { accounts: Account[]; spaces: Space[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title="Add activity" description="Completed spending belongs here. For future or recurring expenses, add a commitment instead." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label>Type<select name="type" defaultValue="debit"><option value="debit">Debit / expense</option><option value="credit">Credit / income</option><option value="adjustment">Balance adjustment</option></select></label><label>Amount<input required name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" /></label><label>Currency<select name="currency" defaultValue={accounts[0]?.currency || 'AED'}><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label><label>Account<select name="account_id" required defaultValue={accounts[0]?.id}>{accounts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.currency}</option>)}</select></label><label>Date<input name="occurred_at" type="datetime-local" defaultValue={new Date().toISOString().slice(0, 16)} /></label><label>Space<select name="space_id" defaultValue=""><option value="">No Space</option>{spaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="full-span">Category<input name="category" required placeholder="Groceries, salary, transport…" /></label><label className="full-span">Note (optional)<input name="description" placeholder="A little context for future you" /></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> Save activity</button></div></form></ModalShell>; }
 

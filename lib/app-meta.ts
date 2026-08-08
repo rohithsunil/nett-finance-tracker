@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.3.1';
+export const APP_VERSION = '1.4.0';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,6 +15,20 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Country-aware monthly money view',
+    commit: 'pending',
+    summary: 'Nett now makes multi-country monthly spending and account context easy to understand on phone and desktop.',
+    changes: [
+      'Added visible FX context with a selectable comparison currency and conversion rate source.',
+      'Added mobile country, workspace and total-currency controls so UAE, India and combined net worth are always one tap away.',
+      'Added month-scoped expense summaries for expenses, income and net cash flow, with activity filtered through the linked account country.',
+      'Added account editing, masked last-four digits, institution details and optional logo URLs.',
+      'Fixed duplicate mobile page headers, safe-area spacing and dark/AMOLED contrast across cards, controls, sheets and navigation.',
+    ],
+  },
+  {
+    version: '1.3.1',
+    date: RELEASE_DATE,
     title: 'Offline-ready financial entry',
     commit: '9eede0e',
     summary: 'The installed Nett experience now has an offline shell and a compatibility path while the new financial migration is being applied.',
@@ -25,7 +39,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.3.1',
     date: RELEASE_DATE,
     title: 'Financial workflows release',
     commit: 'f5480d8',
@@ -39,7 +53,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.3.1',
     date: RELEASE_DATE,
     title: 'Email confirmation handoff',
     commit: 'f5a6220',
