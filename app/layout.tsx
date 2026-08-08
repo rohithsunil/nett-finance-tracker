@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: 'A calm financial operating system for multi-currency life.',
   applicationName: 'Nett',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/icons/nett-lotus-192.png',
+    apple: '/icons/nett-lotus-180.png',
+  },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Nett' },
 };
 

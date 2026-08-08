@@ -13,6 +13,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { calculateMetrics, debtProgress, displayAmount, formatCurrency, formatShortDate, isStale } from '@/lib/finance';
 import { emptyData } from '@/lib/empty-data';
 import { APP_VERSION } from '@/lib/app-meta';
+import NettLogo from '@/components/NettLogo';
 import type { Account, Commitment, Debt, Investment, NettData, Receivable, Theme, Transaction } from '@/lib/types';
 
 type Tab = 'home' | 'accounts' | 'activity' | 'plan' | 'more';
@@ -244,7 +245,7 @@ export default function NettApp() {
   const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
   return <div className="app-shell">
     <aside className="desktop-sidebar">
-      <div className="brand"><div className="brand-mark">n<span>•</span></div><div className="brand-name">nett</div><div className="brand-sub">v1.0</div></div>
+      <div className="brand"><NettLogo priority /><div className="brand-name">nett</div><div className="brand-sub">v{APP_VERSION}</div></div>
       <Link href="/changelog" className="version-link"><GitCommitHorizontal size={13} /> v{APP_VERSION} · release notes</Link>
       <div className="nav-section-label">Your money</div>
       <nav className="nav-list">{navItems.map(({ id, label, icon: Icon }) => <button key={id} className={`nav-button ${tab === id ? 'active' : ''}`} onClick={() => setTab(id)}><Icon size={17} strokeWidth={tab === id ? 2.2 : 1.8} /><span className="nav-caption">{label}</span>{id === 'plan' && <span style={{ marginLeft: 'auto', color: '#bd7dd7', fontSize: 10 }}>2</span>}</button>)}</nav>
@@ -280,7 +281,7 @@ export default function NettApp() {
 }
 
 function LoadingState() {
-  return <main className="loading-shell"><div className="brand-mark">n<span>•</span></div><div className="loading-pulse">Preparing your private workspace…</div></main>;
+  return <main className="loading-shell"><NettLogo priority /><div className="loading-pulse">Preparing your private workspace…</div></main>;
 }
 
 function HomeView({ data, metrics, hidden, setHidden, staleAccounts, onQuick, workspace, displayCurrency, notify }: { data: NettData; metrics: ReturnType<typeof calculateMetrics>; hidden: boolean; setHidden: (value: boolean) => void; staleAccounts: number; onQuick: (modal: Modal) => void; workspace: string; displayCurrency: string; notify: (message: string) => void }) {

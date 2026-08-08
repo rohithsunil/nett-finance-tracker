@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, LockKeyhole, Sparkles } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
+import NettLogo from '@/components/NettLogo';
 
 type AuthMode = 'login' | 'signup' | 'reset';
 
@@ -52,7 +53,7 @@ export default function LoginPage() {
     <div className="auth-orb orb-one" /><div className="auth-orb orb-two" />
     <div className="auth-card">
       <Link href="/" className="back-link"><ArrowLeft size={16} /> Back to Nett</Link>
-      <div className="brand-mark large">n<span>•</span></div>
+      <NettLogo large priority />
       <div className="eyebrow"><Sparkles size={14} /> Your calm financial cockpit</div>
       <h1>{mode === 'login' ? 'Welcome back.' : mode === 'signup' ? 'Make money feel lighter.' : 'A fresh start.'}</h1>
       <p className="auth-copy">{mode === 'login' ? 'Pick up where your last check-in left off.' : mode === 'signup' ? 'Start with one private place for everything you have, owe and plan.' : 'We’ll send a secure link to reset your Nett password.'}</p>

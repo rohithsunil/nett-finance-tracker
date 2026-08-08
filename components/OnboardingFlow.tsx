@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { Check, ChevronRight, CircleDollarSign, LoaderCircle, LockKeyhole, Sparkles, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
+import NettLogo from '@/components/NettLogo';
 
 type Props = { email: string; initialName: string; initialCurrency: string; initialWorkspaceId: string | null };
 
@@ -59,7 +60,7 @@ export default function OnboardingFlow({ email, initialName, initialCurrency, in
   return <main className="onboarding-shell">
     <div className="onboarding-glow glow-one" /><div className="onboarding-glow glow-two" />
     <section className="onboarding-card">
-      <div className="onboarding-top"><div className="brand-mark">n<span>•</span></div><div className="step-count">{step} of 2</div></div>
+      <div className="onboarding-top"><NettLogo priority /><div className="step-count">{step} of 2</div></div>
       <div className="onboarding-progress"><span style={{ width: `${step * 50}%` }} /></div>
       <div className="eyebrow"><Sparkles size={14} /> A softer start with money</div>
       {step === 1 ? <>

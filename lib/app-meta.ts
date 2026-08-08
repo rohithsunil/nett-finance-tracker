@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Lotus brand release',
+    commit: 'PENDING',
+    summary: 'Nett now carries the lotus mark consistently across the web app, PWA install surface and phone notifications.',
+    changes: [
+      'Replaced the placeholder Nett mark with the lotus brand asset across auth, onboarding, loading and desktop surfaces.',
+      'Added the lotus as favicon, Apple Home Screen icon, PWA icon and notification artwork.',
+      'Documented the independent Vercel + Supabase deployment setup and environment-variable locations.',
+    ],
+  },
+  {
+    version: '1.1.0',
     date: RELEASE_DATE,
     title: 'Ready for real users',
     commit: 'cc91d4c',

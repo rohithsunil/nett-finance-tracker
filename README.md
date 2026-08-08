@@ -21,6 +21,13 @@ npm run build
 
 ## Supabase
 
+Vercel and Supabase are intentionally separate services. Nett connects to the independently hosted Supabase project through the two public browser variables below; no Vercel-Supabase integration is required. In Vercel open Project Settings → Environment Variables and add them to the Production environment, then redeploy.
+
+```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+```
+
 The production schema and row-level security migration is in `supabase/migrations/0001_nett_mvp.sql`. It creates the user-isolated finance model, immutable snapshot/audit surfaces, notification subscriptions, and the narrow keep-alive function. Run it once in the SQL editor for a new Supabase project. The migration has already been applied to the configured Nett project during the initial build.
 
 The due-date notification sender is in `supabase/functions/send-due-reminders`. Deploy it as an Edge Function and configure its VAPID and service-role secrets before scheduling it.

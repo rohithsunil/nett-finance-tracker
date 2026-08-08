@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, GitCommitHorizontal, Sparkles } from 'lucide-react';
 import { APP_VERSION, CHANGELOG, REPOSITORY_URL } from '@/lib/app-meta';
+import NettLogo from '@/components/NettLogo';
 
 export default function ChangelogPage() {
   return <main className="changelog-shell">
     <header className="changelog-header">
       <Link href="/" className="back-link"><ArrowLeft size={16} /> Back to Nett</Link>
-      <div className="brand-mark">n<span>•</span></div>
+      <NettLogo priority />
       <div className="eyebrow"><Sparkles size={14} /> Product history</div>
       <h1>Release notes.</h1>
       <p>Every meaningful Nett change, in one calm place.</p>

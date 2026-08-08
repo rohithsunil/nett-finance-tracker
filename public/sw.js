@@ -2,8 +2,8 @@ self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : { title: 'Nett', body: 'A small nudge from your financial cockpit.' };
   event.waitUntil(self.registration.showNotification(data.title || 'Nett', {
     body: data.body || 'Open Nett for the latest picture.',
-    icon: '/icons/icon-192.svg',
-    badge: '/icons/icon-192.svg',
+    icon: '/icons/nett-lotus-192.png',
+    badge: '/icons/nett-lotus-192.png',
     tag: data.tag || 'nett-reminder',
     data: { url: data.url || '/' },
   }));
