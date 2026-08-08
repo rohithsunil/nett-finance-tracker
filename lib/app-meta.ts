@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Ready for real users',
-    commit: 'PENDING',
+    commit: 'cc91d4c',
     summary: 'Authentication, onboarding and production-safe empty states are now part of the Nett launch path.',
     changes: [
       'Unauthenticated visitors are directed to account creation instead of seeing shared demo balances.',

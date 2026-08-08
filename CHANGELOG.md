@@ -2,7 +2,7 @@
 
 ## 1.1.0 — 2026-08-08 — Ready for real users
 
-GitHub commit: `PENDING`
+GitHub commit: [`cc91d4c`](https://github.com/rohithsunil/nett-finance-tracker/commit/cc91d4c)
 
 - Unauthenticated visitors are sent to account creation instead of seeing shared demo balances.
 - New accounts receive a first-run setup flow for profile, currency and first account.
