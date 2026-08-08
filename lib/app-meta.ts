@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Accounts clarity pass',
-    commit: 'pending',
+    commit: '0fbd523',
     summary: 'The Accounts page now has a clearer hierarchy and keeps FX context in one place instead of repeating it on every card.',
     changes: [
       'Removed repeated per-account FX rate labels; the FX context bar is now the single source of truth.',
