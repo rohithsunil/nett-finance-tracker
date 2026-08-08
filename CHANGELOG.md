@@ -2,7 +2,7 @@
 
 ## 1.4.0 — 2026-08-08 — Country-aware monthly money view
 
-GitHub commit: `pending`
+GitHub commit: [`e7de8d1`](https://github.com/rohithsunil/nett-finance-tracker/commit/e7de8d1)
 
 - Added visible FX context with a selectable comparison currency and conversion rate source.
 - Added mobile country, workspace and total-currency controls for UAE, India and combined views.

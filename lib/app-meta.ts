@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Country-aware monthly money view',
-    commit: 'pending',
+    commit: 'e7de8d1',
     summary: 'Nett now makes multi-country monthly spending and account context easy to understand on phone and desktop.',
     changes: [
       'Added visible FX context with a selectable comparison currency and conversion rate source.',
