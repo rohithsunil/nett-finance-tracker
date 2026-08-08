@@ -1,0 +1,30 @@
+[theme]
+base = "light"
+primaryColor = "#171719"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f7f7f9"
+textColor = "#171719"
+borderColor = "#E8E8ED"
+font = "DM Sans:https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+headingFont = "DM Sans:https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&display=swap"
+baseFontSize = 15
+headingFontSizes = ["38px", "26px", "21px", "17px", "15px", "13px"]
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+baseRadius = "large"
+buttonRadius = "full"
+showWidgetBorder = true
+showSidebarBorder = true
+linkUnderline = false
+chartCategoricalColors = ["#A784EF", "#F2A6C8", "#A9D77A", "#F4C96B", "#6EB6C4", "#77777F"]
+
+[theme.sidebar]
+backgroundColor = "#FAFAFC"
+secondaryBackgroundColor = "#F2F1F7"
+borderColor = "#E8E8ED"
+primaryColor = "#171719"
+
+[server]
+runOnSave = true
+
+[browser]
+gatherUsageStats = false

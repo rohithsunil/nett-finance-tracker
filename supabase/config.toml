@@ -1,0 +1,4 @@
+project_id = "nett-finance"
+
+[functions.send-due-reminders]
+verify_jwt = true
