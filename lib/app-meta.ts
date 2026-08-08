@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.3.1';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,18 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Offline-ready financial entry',
+    commit: 'pending push',
+    summary: 'The installed Nett experience now has an offline shell and a compatibility path while the new financial migration is being applied.',
+    changes: [
+      'Added service-worker caching and update cleanup for standalone PWA use.',
+      'Added compatibility fallback for accounts, activity, debt, receivable, transfer and planning writes during migration rollout.',
+      'Kept account metadata masked and recoverable from legacy notes until migration 0002 is present.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
