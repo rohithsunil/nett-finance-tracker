@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.4.3';
+export const APP_VERSION = '1.4.4';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Account deletion controls',
+    commit: 'ceab314',
+    summary: 'Accounts can now be permanently removed from the account editor with a clear confirmation and private, user-scoped deletion.',
+    changes: [
+      'Added a Delete account action to the Edit account flow with an explicit confirmation step.',
+      'Removed the account and its linked activity, snapshots and card details from the signed-in user’s Nett data.',
+      'Kept linked debts and receivables intact while clearing their account relationship.',
+    ],
+  },
+  {
+    version: '1.4.3',
     date: RELEASE_DATE,
     title: 'Accounts clarity pass',
     commit: '0fbd523',

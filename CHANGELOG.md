@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.4.4 — 2026-08-08 — Account deletion controls
+
+GitHub commit: [`ceab314`](https://github.com/rohithsunil/nett-finance-tracker/commit/ceab314)
+
+- Added a Delete account action to the Edit account flow with an explicit confirmation step.
+- Removed the account and its linked activity, snapshots and card details from the signed-in user’s Nett data.
+- Kept linked debts and receivables intact while clearing their account relationship.
+
 ## 1.4.3 — 2026-08-08 — Accounts clarity pass
 
 GitHub commit: [`0fbd523`](https://github.com/rohithsunil/nett-finance-tracker/commit/0fbd523)
