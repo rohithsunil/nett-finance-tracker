@@ -2,7 +2,7 @@
 
 ## 1.4.2 — 2026-08-08 — Space management fix
 
-GitHub commit: `pending`
+GitHub commit: [`58cf282`](https://github.com/rohithsunil/nett-finance-tracker/commit/58cf282)
 
 - Added Edit and Delete actions for Spaces on the Plan screen.
 - Added a delete confirmation; linked transactions remain in Activity while the Space is archived.

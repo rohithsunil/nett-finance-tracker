@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Space management fix',
-    commit: 'pending',
+    commit: '58cf282',
     summary: 'Spaces can now be edited, deleted safely and kept correctly scoped to the active workspace.',
     changes: [
       'Added a dedicated Space management panel with edit and delete actions.',
