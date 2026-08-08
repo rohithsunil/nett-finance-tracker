@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.5.1 - 2026-08-09 - Plan item controls
+
+GitHub commit: [`33872fe`](https://github.com/rohithsunil/nett-finance-tracker/commit/33872fe)
+
+- Added clear Edit and Delete actions for every debt, loan and future commitment.
+- Added confirmation dialogs before removing plan items.
+- Persisted plan edits and deletions to the signed-in Supabase user account.
+
 ## 1.5.0 - 2026-08-08 - Connected money control centre
 
 GitHub commit: [`6dbfde7`](https://github.com/rohithsunil/nett-finance-tracker/commit/6dbfde7)

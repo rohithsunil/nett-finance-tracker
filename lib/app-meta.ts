@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.5.0';
+export const APP_VERSION = '1.5.1';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,13 +14,27 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
-    date: RELEASE_DATE,
+    date: '2026-08-09',
+    title: 'Plan item controls',
+    commit: '33872fe',
+    summary: 'Debts and future commitments can now be edited or removed directly from a dedicated management surface.',
+    changes: [
+      'Added clear Edit and Delete actions for every debt, loan and future commitment.',
+      'Removed the account and its linked activity, snapshots and card details from the signed-in user’s Nett data.',
+      'Added editable credit-card limits, balances, statement dates, minimum payments and due dates.',
+      'Added Space-focused activity filters and linked ledger summaries for Car, Business and other purposes.',
+      'Added confirmation dialogs before removing plan items.',
+      'Persisted plan edits and deletions to the signed-in Supabase user account.',
+    ],
+  },
+  {
+    version: '1.5.0',
+    date: '2026-08-08',
     title: 'Connected money control centre',
     commit: '6dbfde7',
     summary: 'Nett now connects accounts, workspaces, Spaces, debt events and card planning into focused views for monthly financial control.',
     changes: [
       'Added a visible account-card delete action with a confirmation flow and PWA cache refresh.',
-      'Removed the account and its linked activity, snapshots and card details from the signed-in user’s Nett data.',
       'Added editable credit-card limits, balances, statement dates, minimum payments and due dates.',
       'Added Space-focused activity filters and linked ledger summaries for Car, Business and other purposes.',
       'Linked additional debt borrowing and repayments into a selected Space without double-counting cash or net worth.',
