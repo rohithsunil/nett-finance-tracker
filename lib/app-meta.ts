@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.2.1';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,16 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Signup entry fix',
+    commit: 'PENDING',
+    summary: 'The public entry route now opens the account-creation state reliably after hydration.',
+    changes: [
+      'Fixed the `/login?mode=signup` redirect so new visitors see the signup form instead of sign in.',
+    ],
+  },
+  {
+    version: '1.2.0',
     date: RELEASE_DATE,
     title: 'Lotus brand release',
     commit: 'fa3892b',

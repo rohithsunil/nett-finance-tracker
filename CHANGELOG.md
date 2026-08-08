@@ -1,5 +1,11 @@
 # Nett release notes
 
+## 1.2.1 — 2026-08-08 — Signup entry fix
+
+GitHub commit: `PENDING`
+
+- Fixed the `/login?mode=signup` redirect so new visitors see the signup form instead of sign in.
+
 ## 1.2.0 — 2026-08-08 — Lotus brand release
 
 GitHub commit: [`fa3892b`](https://github.com/rohithsunil/nett-finance-tracker/commit/fa3892b)

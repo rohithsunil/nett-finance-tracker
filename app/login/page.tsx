@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, LockKeyhole, Sparkles } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
@@ -8,19 +8,18 @@ import NettLogo from '@/components/NettLogo';
 
 type AuthMode = 'login' | 'signup' | 'reset';
 
-function initialMode(): AuthMode {
-  if (typeof window === 'undefined') return 'login';
-  const mode = new URLSearchParams(window.location.search).get('mode');
-  return mode === 'signup' || mode === 'reset' ? mode : 'login';
-}
-
 export default function LoginPage() {
-  const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('mode');
+    if (requested === 'signup' || requested === 'reset') setMode(requested);
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
