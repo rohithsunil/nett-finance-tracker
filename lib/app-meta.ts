@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.4.4';
+export const APP_VERSION = '1.5.0';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,12 +15,26 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Connected money control centre',
+    commit: '6dbfde7',
+    summary: 'Nett now connects accounts, workspaces, Spaces, debt events and card planning into focused views for monthly financial control.',
+    changes: [
+      'Added a visible account-card delete action with a confirmation flow and PWA cache refresh.',
+      'Removed the account and its linked activity, snapshots and card details from the signed-in user’s Nett data.',
+      'Added editable credit-card limits, balances, statement dates, minimum payments and due dates.',
+      'Added Space-focused activity filters and linked ledger summaries for Car, Business and other purposes.',
+      'Linked additional debt borrowing and repayments into a selected Space without double-counting cash or net worth.',
+    ],
+  },
+  {
+    version: '1.4.4',
+    date: RELEASE_DATE,
     title: 'Account deletion controls',
     commit: 'ceab314',
     summary: 'Accounts can now be permanently removed from the account editor with a clear confirmation and private, user-scoped deletion.',
     changes: [
       'Added a Delete account action to the Edit account flow with an explicit confirmation step.',
-      'Removed the account and its linked activity, snapshots and card details from the signed-in user’s Nett data.',
+      'Removed the account and its linked activity, snapshots and card details from the signed-in user data.',
       'Kept linked debts and receivables intact while clearing their account relationship.',
     ],
   },

@@ -1,5 +1,14 @@
 # Nett release notes
 
+## 1.5.0 - 2026-08-08 - Connected money control centre
+
+GitHub commit: [`6dbfde7`](https://github.com/rohithsunil/nett-finance-tracker/commit/6dbfde7)
+
+- Added a visible account-card delete action with a confirmation flow and PWA cache refresh.
+- Added editable credit-card limits, balances, statement dates, minimum payments and due dates.
+- Added Space-focused activity filters and linked ledger summaries for Car, Business and other purposes.
+- Linked additional debt borrowing and repayments into a selected Space without double-counting cash or net worth.
+
 ## 1.4.4 — 2026-08-08 — Account deletion controls
 
 GitHub commit: [`ceab314`](https://github.com/rohithsunil/nett-finance-tracker/commit/ceab314)
