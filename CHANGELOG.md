@@ -2,7 +2,7 @@
 
 ## 1.2.0 — 2026-08-08 — Lotus brand release
 
-GitHub commit: `PENDING`
+GitHub commit: [`fa3892b`](https://github.com/rohithsunil/nett-finance-tracker/commit/fa3892b)
 
 - Replaced the placeholder Nett mark with the lotus brand asset across auth, onboarding, loading and desktop surfaces.
 - Added the lotus as favicon, Apple Home Screen icon, PWA icon and notification artwork.

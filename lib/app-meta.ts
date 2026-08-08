@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Lotus brand release',
-    commit: 'PENDING',
+    commit: 'fa3892b',
     summary: 'Nett now carries the lotus mark consistently across the web app, PWA install surface and phone notifications.',
     changes: [
       'Replaced the placeholder Nett mark with the lotus brand asset across auth, onboarding, loading and desktop surfaces.',
