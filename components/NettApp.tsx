@@ -18,7 +18,7 @@ import NettLogo from '@/components/NettLogo';
 import type { Account, Commitment, CreditCard as CreditCardRecord, Debt, Investment, InvestmentValue, NettData, Receivable, Space, Theme, Transaction } from '@/lib/types';
 
 type Tab = 'home' | 'accounts' | 'activity' | 'plan' | 'more';
-type Modal = 'account' | 'move-account-country' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'import' | null;
+type Modal = 'account' | 'move-account-country' | 'delete-account' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'import' | null;
 
 const navItems: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: 'home', label: 'Home', icon: Home },
@@ -142,6 +142,7 @@ export default function NettApp() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [movingAccount, setMovingAccount] = useState<Account | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
   const [editingSpace, setEditingSpace] = useState<Space | null>(null);
   const [deletingSpace, setDeletingSpace] = useState<Space | null>(null);
   const [search, setSearch] = useState('');
@@ -312,6 +313,22 @@ export default function NettApp() {
     }
     setData((current) => ({ ...current, accounts: current.accounts.map((item) => item.id === account.id ? { ...item, country_code: nextCountry } : item) }));
     setModal(null); setMovingAccount(null); notify(`${account.name} moved to ${countryLabel(nextCountry)}. Linked activity now follows that country.`);
+  }
+
+  async function deleteAccount(account: Account) {
+    const supabase = getSupabaseBrowser();
+    if (supabase && session) {
+      const { error } = await supabase.from('accounts').delete().eq('id', account.id).eq('user_id', session.userId);
+      if (error) { notify(`Could not delete account: ${error.message}`); return; }
+    }
+    setData((current) => ({
+      ...current,
+      accounts: current.accounts.filter((item) => item.id !== account.id),
+      creditCards: current.creditCards.filter((item) => item.account_id !== account.id),
+      transactions: current.transactions.filter((item) => item.account_id !== account.id),
+    }));
+    setModal(null); setDeletingAccount(null); setEditingAccount(null);
+    notify(`${account.name} deleted.`);
   }
 
   async function createTransaction(form: HTMLFormElement) {
@@ -520,8 +537,9 @@ export default function NettApp() {
       {tab === 'more' && <MoreView data={data} theme={theme} setTheme={updateTheme} pushEnabled={pushEnabled} enableNotifications={enableNotifications} exportData={exportData} exportCsv={exportCsv} exportXlsx={exportXlsx} session={!!session} onQuick={(next) => setModal(next)} />}
     </main>
     <button className="mobile-quick-add" aria-label="Quick add" onClick={() => setModal('transaction')}><Plus size={22} /></button><nav className="mobile-nav">{navItems.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}><Icon size={17} /><span>{label}</span></button>)}</nav>
-    {modal === 'account' && <AccountModal account={editingAccount} workspaces={data.workspaces} onClose={() => { setModal(null); setEditingAccount(null); }} onSave={saveAccount} />}
+    {modal === 'account' && <AccountModal account={editingAccount} workspaces={data.workspaces} onClose={() => { setModal(null); setEditingAccount(null); }} onSave={saveAccount} onDelete={(account) => { setEditingAccount(null); setDeletingAccount(account); setModal('delete-account'); }} />}
     {modal === 'move-account-country' && movingAccount && <MoveAccountCountryModal account={movingAccount} onClose={() => { setModal(null); setMovingAccount(null); }} onSave={moveAccountCountry} />}
+    {modal === 'delete-account' && deletingAccount && <DeleteAccountModal account={deletingAccount} onClose={() => { setModal(null); setDeletingAccount(null); }} onDelete={() => void deleteAccount(deletingAccount)} />}
     {modal === 'transaction' && <TransactionModalV2 accounts={data.accounts} spaces={data.spaces} onClose={() => setModal(null)} onSave={createTransaction} />}
     {modal === 'transfer' && <TransferModal accounts={data.accounts} onClose={() => setModal(null)} onSave={createTransfer} />}
     {modal === 'checkin' && <CheckInModal accounts={data.accounts} onClose={() => setModal(null)} onSave={saveCheckin} />}
@@ -619,7 +637,7 @@ function MoreView({ data, theme, setTheme, pushEnabled, enableNotifications, exp
 
 function ModalShell({ title, description, children, onClose }: { title: string; description: string; children: React.ReactNode; onClose: () => void }) { return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal"><div className="modal-header"><div><h3>{title}</h3><p>{description}</p></div><button className="icon-button" onClick={onClose} aria-label="Close"><X size={16} /></button></div>{children}</div></div>; }
 
-function AccountModal({ account, workspaces, onClose, onSave }: { account: Account | null; workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
+function AccountModal({ account, workspaces, onClose, onSave, onDelete }: { account: Account | null; workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void; onDelete: (account: Account) => void }) {
   return <ModalShell title={account ? 'Edit account' : 'Add an account'} description="Keep recognition details useful and private. Full account numbers never belong in Nett." onClose={onClose}>
     <form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}>
       {account && <input type="hidden" name="id" value={account.id} />}
@@ -637,7 +655,7 @@ function AccountModal({ account, workspaces, onClose, onSave }: { account: Accou
         <label className="check-row"><input type="checkbox" name="include_net_worth" value="true" defaultChecked={account?.include_net_worth ?? true} /> Include in net worth</label>
         <label className="check-row"><input type="checkbox" name="include_liquidity" value="true" defaultChecked={account?.include_liquidity ?? true} /> Include in liquid cash</label>
       </div>
-      <div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> {account ? 'Save changes' : 'Save account'}</button></div>
+      <div className="modal-actions">{account && <button type="button" className="danger-button account-delete-action" onClick={() => onDelete(account)}><Trash2 size={15} /> Delete account</button>}<button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> {account ? 'Save changes' : 'Save account'}</button></div>
     </form>
   </ModalShell>;
 }
@@ -651,6 +669,13 @@ function MoveAccountCountryModal({ account, onClose, onSave }: { account: Accoun
       <div className="form-message"><CircleHelp size={15} /> Linked expenses and history will appear under the new country after this change.</div>
       <div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><MoveRight size={15} /> Move account</button></div>
     </form>
+  </ModalShell>;
+}
+
+function DeleteAccountModal({ account, onClose, onDelete }: { account: Account; onClose: () => void; onDelete: () => void }) {
+  return <ModalShell title={`Delete ${account.name}?`} description="Remove this account from Nett permanently." onClose={onClose}>
+    <div className="delete-confirmation"><Trash2 size={20} /><strong>This cannot be undone from the app.</strong><span>The account, linked transactions, balance snapshots and card details will be removed. Debts or receivables linked to it will remain, but their account link will be cleared.</span></div>
+    <div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep account</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete account</button></div>
   </ModalShell>;
 }
 
