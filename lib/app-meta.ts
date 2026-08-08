@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.4.1';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,15 +15,15 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
-    title: 'Country-aware monthly money view',
-    commit: 'e7de8d1',
-    summary: 'Nett now makes multi-country monthly spending and account context easy to understand on phone and desktop.',
+    title: 'Country transfer & trust polish',
+    commit: 'pending',
+    summary: 'Nett now makes moving an account between countries explicit, and surfaces financial attention states more honestly.',
     changes: [
+      'Added a dedicated Move country action on every account with a confirmation that explains how linked activity will be reclassified.',
       'Added visible FX context with a selectable comparison currency and conversion rate source.',
       'Added mobile country, workspace and total-currency controls so UAE, India and combined net worth are always one tap away.',
       'Added month-scoped expense summaries for expenses, income and net cash flow, with activity filtered through the linked account country.',
-      'Added account editing, masked last-four digits, institution details and optional logo URLs.',
-      'Fixed duplicate mobile page headers, safe-area spacing and dark/AMOLED contrast across cards, controls, sheets and navigation.',
+      'Made negative Safe to Spend states explicit and improved empty monthly activity guidance for both expenses and income.',
     ],
   },
   {

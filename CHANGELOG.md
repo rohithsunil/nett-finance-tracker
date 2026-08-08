@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.4.1 — 2026-08-08 — Country transfer & trust polish
+
+GitHub commit: `pending`
+
+- Added a dedicated Move country action on every account with a confirmation explaining how linked activity follows the account.
+- Made negative Safe to Spend states explicit instead of presenting them as a normal available balance.
+- Improved empty monthly activity guidance for both expenses and income.
+
 ## 1.4.0 — 2026-08-08 — Country-aware monthly money view
 
 GitHub commit: [`e7de8d1`](https://github.com/rohithsunil/nett-finance-tracker/commit/e7de8d1)
