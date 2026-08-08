@@ -38,5 +38,8 @@ export const demoData: NettData = {
     { id: 't3', workspace_id: 'personal', account_id: 'aed-main', type: 'debit', amount: 75, currency: 'AED', category: 'Transport', description: 'Careem', occurred_at: '2026-08-05T17:22:00Z' },
     { id: 't4', workspace_id: 'studio', account_id: 'studio-bank', type: 'credit', amount: 3200, currency: 'AED', category: 'Client payment', description: 'Project retainer', occurred_at: '2026-08-04T12:10:00Z' },
   ],
+  creditCards: [],
+  spaces: [],
+  investmentValues: [],
   fxRates: { AED_USD: 0.2723, USD_AED: 3.6725, AED_INR: 22.58, INR_AED: 0.0443, USD_INR: 82.92, INR_USD: 0.0121 },
 };

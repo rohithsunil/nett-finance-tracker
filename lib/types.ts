@@ -1,7 +1,8 @@
 export type Currency = 'AED' | 'INR' | 'USD' | string;
 export type Theme = 'light' | 'dark' | 'amoled' | 'system';
 export type DebtClass = 'mandatory' | 'flexible';
-export type TransactionType = 'credit' | 'debit' | 'transfer' | 'debt_borrowing' | 'debt_repayment' | 'adjustment';
+export type TransactionType = 'credit' | 'debit' | 'transfer' | 'debt_borrowing' | 'debt_repayment' | 'receivable_creation' | 'receivable_repayment' | 'adjustment';
+export type CountryCode = string;
 
 export interface Profile {
   id: string;
@@ -28,7 +29,12 @@ export interface Account {
   balance_verified_at?: string | null;
   include_net_worth: boolean;
   include_liquidity: boolean;
+  institution_name?: string | null;
+  account_last4?: string | null;
+  country_code?: CountryCode | null;
+  notes?: string | null;
   archived?: boolean;
+  sort_order?: number;
 }
 
 export interface Debt {
@@ -42,6 +48,8 @@ export interface Debt {
   comfortable_target?: number | string | null;
   due_date?: string | null;
   status: string;
+  country_code?: CountryCode | null;
+  notes?: string | null;
 }
 
 export interface Receivable {
@@ -55,6 +63,8 @@ export interface Receivable {
   confidence: 'confirmed' | 'likely' | 'uncertain';
   include_in_net_worth: boolean;
   status: string;
+  country_code?: CountryCode | null;
+  notes?: string | null;
 }
 
 export interface Investment {
@@ -70,6 +80,8 @@ export interface Investment {
   archived?: boolean;
   latest_value?: number | string | null;
   latest_value_at?: string | null;
+  country_code?: CountryCode | null;
+  latest_value_source?: string | null;
 }
 
 export interface Commitment {
@@ -82,6 +94,10 @@ export interface Commitment {
   recurrence: string;
   importance: 'mandatory' | 'planned' | 'optional';
   status: string;
+  country_code?: CountryCode | null;
+  expected_income?: boolean;
+  confidence?: string;
+  notes?: string | null;
 }
 
 export interface Reserve {
@@ -92,6 +108,39 @@ export interface Reserve {
   funded_amount: number | string;
   currency: Currency;
   due_date?: string | null;
+  country_code?: CountryCode | null;
+}
+
+export interface CreditCard {
+  id: string;
+  account_id: string;
+  credit_limit: number | string;
+  current_outstanding: number | string;
+  statement_balance: number | string;
+  statement_date?: string | null;
+  payment_due_date?: string | null;
+  minimum_payment: number | string;
+}
+
+export interface Space {
+  id: string;
+  workspace_id: string;
+  name: string;
+  color: string;
+  budget?: number | string | null;
+  allocation?: number | string | null;
+  currency: Currency;
+  notes?: string | null;
+}
+
+export interface InvestmentValue {
+  id: string;
+  investment_id: string;
+  value: number | string;
+  price?: number | string | null;
+  currency: Currency;
+  source: string;
+  valued_at: string;
 }
 
 export interface Transaction {
@@ -121,7 +170,12 @@ export interface NettData {
   commitments: Commitment[];
   reserves: Reserve[];
   transactions: Transaction[];
+  creditCards: CreditCard[];
+  spaces: Space[];
+  investmentValues: InvestmentValue[];
   fxRates: FxRates;
+  fxRateSource?: string;
+  fxRatesUpdatedAt?: string | null;
 }
 
 export interface FinanceMetrics {

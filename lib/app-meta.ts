@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.2.2';
+export const APP_VERSION = '1.3.0';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Financial workflows release',
+    commit: 'pending push',
+    summary: 'Nett now has the foundations for real-world accounts, loans, IOUs, transfers, recurring planning and country-aware totals.',
+    changes: [
+      'Added bank/institution name, optional masked last four digits, country and inclusion controls to accounts.',
+      'Added persisted transaction, debt-event, receivable-payment, transfer and check-in operations.',
+      'Added debt/loan creation, flexible IOUs, partial receivable payments, reserves, Spaces and workspaces.',
+      'Added recurring commitment occurrences, live FX refresh with historical rate storage, currency and country context controls.',
+      'Reworked mobile navigation, safe areas, native-style sheets, typography, themes and installed-PWA layout.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,

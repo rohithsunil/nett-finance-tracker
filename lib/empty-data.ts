@@ -16,6 +16,9 @@ export const emptyData: NettData = {
   commitments: [],
   reserves: [],
   transactions: [],
+  creditCards: [],
+  spaces: [],
+  investmentValues: [],
   fxRates: {
     AED_USD: 0.2723,
     USD_AED: 3.6725,
@@ -24,4 +27,6 @@ export const emptyData: NettData = {
     USD_INR: 82.92,
     INR_USD: 0.0121,
   },
+  fxRateSource: 'Nett baseline rates',
+  fxRatesUpdatedAt: null,
 };

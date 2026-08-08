@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateMetrics, debtProgress, isStale } from '../lib/finance';
+import { calculateMetrics, commitmentOccurrences, convertAmount, debtProgress, hasFxRate, isStale } from '../lib/finance';
 import type { Account, Commitment, Debt, Investment, Receivable, Reserve } from '../lib/types';
 
 const account = (overrides: Partial<Account> = {}): Account => ({ id: 'a', workspace_id: 'p', name: 'Cash', type: 'current', currency: 'AED', verified_balance: 10000, include_net_worth: true, include_liquidity: true, ...overrides });
@@ -30,5 +30,15 @@ describe('Nett financial calculations', () => {
     expect(debtProgress(debt())).toBe(60);
     expect(isStale('2026-07-01T00:00:00.000Z', 31, new Date('2026-08-08T00:00:00.000Z'))).toBe(true);
     expect(isStale('2026-08-01T00:00:00.000Z', 31, new Date('2026-08-08T00:00:00.000Z'))).toBe(false);
+  });
+
+  it('does not silently convert an unknown currency as one-to-one', () => {
+    expect(convertAmount(100, 'KWD', 'AED', {}).toNumber()).toBe(0);
+    expect(hasFxRate('KWD', 'AED', {})).toBe(false);
+  });
+
+  it('expands recurring commitments only within the forecast window', () => {
+    const dates = commitmentOccurrences({ id: 'c', workspace_id: 'p', name: 'Rent', amount: 100, currency: 'AED', due_date: '2026-08-01', recurrence: 'monthly', importance: 'mandatory', status: 'open' }, new Date('2026-08-01T00:00:00Z'), new Date('2026-10-31T00:00:00Z'));
+    expect(dates).toHaveLength(3);
   });
 });

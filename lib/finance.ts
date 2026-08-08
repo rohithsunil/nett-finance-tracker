@@ -9,7 +9,13 @@ export function convertAmount(value: number | string | Decimal, from: string, to
   const inverse = rates[`${to}_${from}`];
   if (direct) return money(value).mul(direct);
   if (inverse) return money(value).div(inverse);
-  return money(value);
+  // Never silently treat two different currencies as equal. Callers can use
+  // hasFxRate() to show a clear “rate unavailable” state in the interface.
+  return new Decimal(0);
+}
+
+export function hasFxRate(from: string, to: string, rates: FxRates = {}) {
+  return from === to || Boolean(rates[`${from}_${to}`] || rates[`${to}_${from}`]);
 }
 
 export function displayAmount(value: number | string, currency: string, displayCurrency: string, rates: FxRates = {}) {
@@ -22,6 +28,31 @@ export function getAccountBalance(account: Account) {
 
 function latestInvestmentValue(investment: Investment) {
   return money(investment.latest_value);
+}
+
+function addMonths(date: Date, months: number) {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months);
+  return next;
+}
+
+export function commitmentOccurrences(commitment: Commitment, from: Date, to: Date) {
+  const first = new Date(`${commitment.due_date}T12:00:00`);
+  if (Number.isNaN(first.getTime()) || first > to) return [] as Date[];
+  const recurrence = commitment.recurrence || 'one_time';
+  if (recurrence === 'one_time') return first >= from ? [first] : [];
+  const dates: Date[] = [];
+  let cursor = first;
+  let guard = 0;
+  while (cursor <= to && guard < 260) {
+    if (cursor >= from) dates.push(new Date(cursor));
+    guard += 1;
+    if (recurrence === 'weekly') cursor.setDate(cursor.getDate() + 7);
+    else if (recurrence === 'monthly') cursor = addMonths(cursor, 1);
+    else if (recurrence === 'quarterly') cursor = addMonths(cursor, 3);
+    else cursor = addMonths(cursor, 12);
+  }
+  return dates;
 }
 
 export function calculateMetrics(
@@ -48,7 +79,12 @@ export function calculateMetrics(
   const protectedAmount = reserves.reduce((sum, reserve) => sum.plus(convertAmount(reserve.funded_amount, reserve.currency, displayCurrency, rates)), new Decimal(0));
   const windowEnd = new Date(today);
   windowEnd.setDate(windowEnd.getDate() + 90);
-  const upcomingCommitments = commitments.filter((item) => item.status === 'open' && item.importance === 'mandatory' && new Date(item.due_date) <= windowEnd).reduce((sum, item) => sum.plus(convertAmount(item.amount, item.currency, displayCurrency, rates)), new Decimal(0));
+  const upcomingCommitments = commitments
+    .filter((item) => item.status === 'open' && item.importance === 'mandatory')
+    .reduce((sum, item) => {
+      const occurrences = commitmentOccurrences(item, today, windowEnd);
+      return sum.plus(convertAmount(item.amount, item.currency, displayCurrency, rates).mul(occurrences.length));
+    }, new Decimal(0));
 
   return {
     primaryNetWorth: cash.plus(investmentsValue).plus(receivableValue).minus(mandatoryDebt).toNumber(),
