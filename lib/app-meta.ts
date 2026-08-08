@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Financial workflows release',
-    commit: 'pending push',
+    commit: 'f5480d8',
     summary: 'Nett now has the foundations for real-world accounts, loans, IOUs, transfers, recurring planning and country-aware totals.',
     changes: [
       'Added bank/institution name, optional masked last four digits, country and inclusion controls to accounts.',
