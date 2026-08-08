@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:3000>. Without Supabase variables the app runs in a safe demo mode. To enable authentication and persistence, create `.env.local` from `.env.local.example` and add the values from the Supabase project Connect panel. Never commit `.env.local` or a service-role key.
+Open <http://localhost:3000>. Supabase variables are required for the production app; without them Nett shows a configuration screen and never displays shared demo balances. Create `.env.local` from `.env.local.example` and add the values from the Supabase project Connect panel. Never commit `.env.local` or a service-role key.
 
 ## Verify the build
 
@@ -24,6 +24,14 @@ npm run build
 The production schema and row-level security migration is in `supabase/migrations/0001_nett_mvp.sql`. It creates the user-isolated finance model, immutable snapshot/audit surfaces, notification subscriptions, and the narrow keep-alive function. Run it once in the SQL editor for a new Supabase project. The migration has already been applied to the configured Nett project during the initial build.
 
 The due-date notification sender is in `supabase/functions/send-due-reminders`. Deploy it as an Edge Function and configure its VAPID and service-role secrets before scheduling it.
+
+## Authentication and onboarding
+
+The root route requires a Supabase session. New users are sent through `/onboarding`, which creates their profile, Personal workspace and first account (or lets them continue with an empty workspace). Configure Supabase Auth email confirmation and add the local and deployed callback URLs: `/auth/callback`.
+
+## Releases
+
+The current release is shown at `/changelog` and in `CHANGELOG.md`. For every pushed release, update `package.json`, `lib/app-meta.ts` and `CHANGELOG.md`; after pushing, record the short Git commit ID in the release entry and link it to GitHub.
 
 ## PWA and phone notifications
 

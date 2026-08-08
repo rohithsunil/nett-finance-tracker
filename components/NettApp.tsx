@@ -1,16 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   ArrowDownLeft, ArrowUpRight, Bell, BriefcaseBusiness, CalendarClock, Check, ChevronDown,
   CircleHelp, CirclePlus, CreditCard, Download, Eye, EyeOff, FileSpreadsheet, Filter, Gauge,
-  Home, Landmark, LayoutGrid, LineChart, ListFilter, LockKeyhole, LogIn, Menu, MoreHorizontal,
+  GitCommitHorizontal, Home, Landmark, LayoutGrid, LineChart, ListFilter, LockKeyhole, LogIn, Menu, MoreHorizontal,
   MoveRight, Plus, RefreshCw, Search, Settings2, ShieldCheck, Sparkles, Target, TrendingDown,
   TrendingUp, Upload, Wallet, X, Zap,
 } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { calculateMetrics, debtProgress, displayAmount, formatCurrency, formatShortDate, isStale } from '@/lib/finance';
-import { demoData } from '@/lib/demo-data';
+import { emptyData } from '@/lib/empty-data';
+import { APP_VERSION } from '@/lib/app-meta';
 import type { Account, Commitment, Debt, Investment, NettData, Receivable, Theme, Transaction } from '@/lib/types';
 
 type Tab = 'home' | 'accounts' | 'activity' | 'plan' | 'more';
@@ -66,8 +68,9 @@ function ActivityRow({ transaction, displayCurrency, rates }: { transaction: Tra
 export default function NettApp() {
   const [tab, setTab] = useState<Tab>('home');
   const [modal, setModal] = useState<Modal>(null);
-  const [data, setData] = useState<NettData>(demoData);
+  const [data, setData] = useState<NettData>(emptyData);
   const [session, setSession] = useState<{ userId: string; email?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
   const [hidden, setHidden] = useState(false);
   const [workspace, setWorkspace] = useState('everything');
   const [search, setSearch] = useState('');
@@ -97,10 +100,11 @@ export default function NettApp() {
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-    if (!supabase) return;
+    if (!supabase) { setLoading(false); return; }
     let mounted = true;
     supabase.auth.getSession().then(async ({ data: auth }) => {
-      if (!mounted || !auth.session) return;
+      if (!mounted) return;
+      if (!auth.session) { window.location.href = '/login?mode=signup'; return; }
       setSession({ userId: auth.session.user.id, email: auth.session.user.email });
       const userId = auth.session.user.id;
       const [profile, workspaces, accounts, debts, receivables, investments, commitments, reserves, transactions] = await Promise.all([
@@ -115,10 +119,8 @@ export default function NettApp() {
         supabase.from('transactions').select('*').eq('user_id', userId).order('occurred_at', { ascending: false }).limit(100),
       ]);
       if (!mounted) return;
-      const hasAnyData = (accounts.data?.length || workspaces.data?.length || debts.data?.length || transactions.data?.length);
-      if (hasAnyData || profile.data) {
-        setData((current) => ({ ...current, profile: { ...current.profile, ...(profile.data || {}) }, workspaces: workspaces.data || [], accounts: accounts.data || [], debts: debts.data || [], receivables: receivables.data || [], investments: investments.data || [], commitments: commitments.data || [], reserves: reserves.data || [], transactions: transactions.data || [] }));
-      }
+      setData((current) => ({ ...current, profile: { ...current.profile, ...(profile.data || {}), id: userId }, workspaces: workspaces.data || [], accounts: accounts.data || [], debts: debts.data || [], receivables: receivables.data || [], investments: investments.data || [], commitments: commitments.data || [], reserves: reserves.data || [], transactions: transactions.data || [] }));
+      setLoading(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, auth) => setSession(auth ? { userId: auth.user.id, email: auth.user.email } : null));
     return () => { mounted = false; listener.subscription.unsubscribe(); };
@@ -128,6 +130,12 @@ export default function NettApp() {
 
   function notify(message: string) { setToast(message); }
 
+  async function signOut() {
+    const supabase = getSupabaseBrowser();
+    if (supabase) await supabase.auth.signOut();
+    window.location.href = '/login';
+  }
+
   async function createAccount(form: HTMLFormElement) {
     const formData = new FormData(form);
     const item: Account = { id: crypto.randomUUID(), workspace_id: String(formData.get('workspace_id')), name: String(formData.get('name')), type: String(formData.get('type')), currency: String(formData.get('currency')), verified_balance: Number(formData.get('balance')), estimated_balance: Number(formData.get('balance')), balance_verified_at: new Date().toISOString(), include_net_worth: true, include_liquidity: true };
@@ -135,6 +143,16 @@ export default function NettApp() {
     const supabase = getSupabaseBrowser();
     if (supabase && session) await supabase.from('accounts').insert({ user_id: session.userId, workspace_id: item.workspace_id, name: item.name, type: item.type, currency: item.currency, verified_balance: item.verified_balance, estimated_balance: item.estimated_balance, balance_verified_at: item.balance_verified_at });
     setModal(null); notify(`${item.name} added to Nett.`);
+  }
+
+  async function importAccounts(items: Account[]) {
+    const supabase = getSupabaseBrowser();
+    if (supabase && session) {
+      const { error } = await supabase.from('accounts').insert(items.map((item) => ({ id: item.id, user_id: session.userId, workspace_id: item.workspace_id, name: item.name, type: item.type, currency: item.currency, verified_balance: item.verified_balance, estimated_balance: item.estimated_balance, balance_verified_at: item.balance_verified_at, include_net_worth: item.include_net_worth, include_liquidity: item.include_liquidity })));
+      if (error) { notify(`Import failed: ${error.message}`); return; }
+    }
+    setData((current) => ({ ...current, accounts: [...current.accounts, ...items] }));
+    setModal(null); notify(`${items.length} account${items.length === 1 ? '' : 's'} imported and saved.`);
   }
 
   async function createTransaction(form: HTMLFormElement) {
@@ -221,12 +239,16 @@ export default function NettApp() {
 
   function runWhatIf() { setWhatIfResult(metrics.safeToSpend - Number(whatIf || 0)); }
 
+  if (loading) return <LoadingState />;
+
   const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
   return <div className="app-shell">
     <aside className="desktop-sidebar">
       <div className="brand"><div className="brand-mark">n<span>•</span></div><div className="brand-name">nett</div><div className="brand-sub">v1.0</div></div>
+      <Link href="/changelog" className="version-link"><GitCommitHorizontal size={13} /> v{APP_VERSION} · release notes</Link>
       <div className="nav-section-label">Your money</div>
       <nav className="nav-list">{navItems.map(({ id, label, icon: Icon }) => <button key={id} className={`nav-button ${tab === id ? 'active' : ''}`} onClick={() => setTab(id)}><Icon size={17} strokeWidth={tab === id ? 2.2 : 1.8} /><span className="nav-caption">{label}</span>{id === 'plan' && <span style={{ marginLeft: 'auto', color: '#bd7dd7', fontSize: 10 }}>2</span>}</button>)}</nav>
+      <button className="nav-button" onClick={signOut}><LogIn size={17} /><span className="nav-caption">Sign out</span></button>
       <div className="nav-section-label" style={{ marginTop: 25 }}>Context</div>
       <div className="workspace-switcher"><div className="small-label"><span>Workspace</span><ChevronDown size={13} /></div><div className="workspace-name"><span className="workspace-dot" />{workspace === 'everything' ? 'Everything' : data.workspaces.find((item) => item.id === workspace)?.name || 'Personal'}</div></div>
       <select value={workspace} onChange={(event) => setWorkspace(event.target.value)} aria-label="Workspace filter" style={{ fontSize: 11, padding: '9px 10px', margin: '0 3px', width: 'calc(100% - 6px)' }}><option value="everything">Everything</option>{data.workspaces.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select>
@@ -252,12 +274,17 @@ export default function NettApp() {
     {modal === 'debt' && <DebtModal debts={data.debts} onClose={() => setModal(null)} onSave={createDebtEvent} />}
     {modal === 'receivable' && <ReceivableModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createReceivable} />}
     {modal === 'investment' && <InvestmentModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createInvestment} />}
-    {modal === 'import' && <ImportModal onClose={() => setModal(null)} onImport={(items) => { setData((current) => ({ ...current, accounts: [...current.accounts, ...items] })); setModal(null); notify(`${items.length} account${items.length === 1 ? '' : 's'} imported for review.`); }} />}
+    {modal === 'import' && <ImportModal workspaces={data.workspaces} onClose={() => setModal(null)} onImport={importAccounts} />}
     {toast && <div className="toast"><Sparkles size={16} /> {toast}</div>}
   </div>;
 }
 
+function LoadingState() {
+  return <main className="loading-shell"><div className="brand-mark">n<span>•</span></div><div className="loading-pulse">Preparing your private workspace…</div></main>;
+}
+
 function HomeView({ data, metrics, hidden, setHidden, staleAccounts, onQuick, workspace, displayCurrency, notify }: { data: NettData; metrics: ReturnType<typeof calculateMetrics>; hidden: boolean; setHidden: (value: boolean) => void; staleAccounts: number; onQuick: (modal: Modal) => void; workspace: string; displayCurrency: string; notify: (message: string) => void }) {
+  if (!data.accounts.length) return <div className="empty-home"><div className="empty-home-icon"><Wallet size={23} /></div><div className="eyebrow"><Sparkles size={13} /> Your private workspace is ready</div><h2>Start with one real account.</h2><p>Add your first balance and Nett will turn it into a calm, useful picture. You can add debts, commitments and activity whenever you’re ready.</p><button className="primary-button" onClick={() => window.location.href = '/onboarding'}>Complete setup <ChevronDown size={15} style={{ transform: 'rotate(-90deg)' }} /></button><button className="empty-home-link" onClick={() => onQuick('account')}>I’m ready to add an account manually</button></div>;
   const maxReserve = Math.max(metrics.liquidCash, 1); const safePercent = Math.min(100, Math.max(0, metrics.safeToSpend / maxReserve * 100));
   return <>
     <div className="dashboard-grid">
@@ -304,6 +331,6 @@ function ReceivableModal({ workspaces, onClose, onSave }: { workspaces: NettData
 
 function InvestmentModal({ workspaces, onClose, onSave }: { workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title="Add a holding" description="Manual values keep your portfolio useful even without a quote provider." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label>Symbol<input name="symbol" required placeholder="NVDA" /></label><label>Exchange<input name="exchange" placeholder="NASDAQ" /></label><label className="full-span">Name<input name="name" placeholder="Company or fund name" /></label><label>Quantity<input name="quantity" required type="number" min="0" step="0.0001" placeholder="0" /></label><label>Average cost<input name="average_cost" required type="number" min="0" step="0.01" placeholder="0" /></label><label>Current value<input name="value" required type="number" min="0" step="0.01" placeholder="0" /></label><label>Currency<select name="currency" defaultValue="USD"><option>AED</option><option>INR</option><option>USD</option></select></label><label>Workspace<select name="workspace_id" defaultValue={workspaces[0]?.id}>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> Save holding</button></div></form></ModalShell>; }
 
-function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (items: Account[]) => void }) { const [fileName, setFileName] = useState(''); const [items, setItems] = useState<Account[]>([]); async function readFile(file: File) { const text = await file.text(); const [header, ...lines] = text.trim().split(/\r?\n/); const headers = header.split(',').map((item) => item.trim().toLowerCase()); const parsed = lines.filter(Boolean).map((line) => { const cells = line.split(',').map((item) => item.trim()); const get = (key: string, fallback = '') => cells[headers.indexOf(key)] || fallback; return { id: crypto.randomUUID(), workspace_id: 'personal', name: get('name', 'Imported account'), type: get('type', 'current'), currency: get('currency', 'AED'), verified_balance: Number(get('balance', '0')), estimated_balance: Number(get('balance', '0')), balance_verified_at: new Date().toISOString(), include_net_worth: true, include_liquidity: true } as Account; }); setFileName(file.name); setItems(parsed); } return <ModalShell title="Import accounts" description="Start with a CSV preview. Nothing is committed until you confirm." onClose={onClose}><label>CSV file<input type="file" accept=".csv,text/csv" onChange={(event) => { const file = event.target.files?.[0]; if (file) void readFile(file); }} /></label>{fileName && <div className="form-message"><Check size={16} /> {fileName} · {items.length} rows ready for review.</div>}<div className="modal-actions"><button className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button" disabled={!items.length} onClick={() => onImport(items)}><Upload size={15} /> Import preview</button></div></ModalShell>; }
+function ImportModal({ workspaces, onClose, onImport }: { workspaces: NettData['workspaces']; onClose: () => void; onImport: (items: Account[]) => void | Promise<void> }) { const [fileName, setFileName] = useState(''); const [items, setItems] = useState<Account[]>([]); async function readFile(file: File) { const text = await file.text(); const [header, ...lines] = text.trim().split(/\r?\n/); const headers = header.split(',').map((item) => item.trim().toLowerCase()); const parsed = lines.filter(Boolean).map((line) => { const cells = line.split(',').map((item) => item.trim()); const get = (key: string, fallback = '') => cells[headers.indexOf(key)] || fallback; return { id: crypto.randomUUID(), workspace_id: workspaces[0]?.id || '', name: get('name', 'Imported account'), type: get('type', 'current'), currency: get('currency', 'AED'), verified_balance: Number(get('balance', '0')), estimated_balance: Number(get('balance', '0')), balance_verified_at: new Date().toISOString(), include_net_worth: true, include_liquidity: true } as Account; }); setFileName(file.name); setItems(parsed); } return <ModalShell title="Import accounts" description="Start with a CSV preview. Nothing is committed until you confirm." onClose={onClose}><label>CSV file<input type="file" accept=".csv,text/csv" onChange={(event) => { const file = event.target.files?.[0]; if (file) void readFile(file); }} /></label>{fileName && <div className="form-message"><Check size={16} /> {fileName} · {items.length} rows ready for review.</div>}<div className="modal-actions"><button className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button" disabled={!items.length || !workspaces.length} onClick={() => void onImport(items)}><Upload size={15} /> Import and save</button></div></ModalShell>; }
 
 function urlBase64ToUint8Array(base64String: string) { const padding = '='.repeat((4 - base64String.length % 4) % 4); const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/'); const rawData = window.atob(base64); return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0))); }

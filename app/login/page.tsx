@@ -5,8 +5,16 @@ import Link from 'next/link';
 import { ArrowLeft, Check, LockKeyhole, Sparkles } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 
+type AuthMode = 'login' | 'signup' | 'reset';
+
+function initialMode(): AuthMode {
+  if (typeof window === 'undefined') return 'login';
+  const mode = new URLSearchParams(window.location.search).get('mode');
+  return mode === 'signup' || mode === 'reset' ? mode : 'login';
+}
+
 export default function LoginPage() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -18,14 +26,27 @@ export default function LoginPage() {
     setLoading(true); setMessage('');
     const supabase = getSupabaseBrowser();
     if (!supabase) { setMessage('Add Supabase variables to .env.local to enable accounts.'); setLoading(false); return; }
+
+    if (mode === 'reset') {
+      const result = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth/callback?next=/reset-password` });
+      if (result.error) setMessage(result.error.message);
+      else setMessage('Check your email for a secure password reset link.');
+      setLoading(false);
+      return;
+    }
+
     const result = mode === 'login'
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
+      : await supabase.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/auth/callback` } });
     if (result.error) setMessage(result.error.message);
-    else if (mode === 'signup') setMessage('Account created. Check your email to confirm Nett.');
+    else if (mode === 'signup' && !result.data.session) setMessage('Account created. Check your email to confirm Nett, then return here to sign in.');
+    else if (mode === 'signup') window.location.href = '/onboarding';
     else window.location.href = '/';
     setLoading(false);
   }
+
+  const reset = () => { setMode('reset'); setMessage(''); };
+  const switchMode = () => { setMode(mode === 'login' ? 'signup' : 'login'); setMessage(''); };
 
   return <main className="auth-shell">
     <div className="auth-orb orb-one" /><div className="auth-orb orb-two" />
@@ -33,16 +54,18 @@ export default function LoginPage() {
       <Link href="/" className="back-link"><ArrowLeft size={16} /> Back to Nett</Link>
       <div className="brand-mark large">n<span>•</span></div>
       <div className="eyebrow"><Sparkles size={14} /> Your calm financial cockpit</div>
-      <h1>{mode === 'login' ? 'Welcome back.' : 'Make money feel lighter.'}</h1>
-      <p className="auth-copy">{mode === 'login' ? 'Pick up where your last check-in left off.' : 'Start with one private place for everything you have, owe and plan.'}</p>
+      <h1>{mode === 'login' ? 'Welcome back.' : mode === 'signup' ? 'Make money feel lighter.' : 'A fresh start.'}</h1>
+      <p className="auth-copy">{mode === 'login' ? 'Pick up where your last check-in left off.' : mode === 'signup' ? 'Start with one private place for everything you have, owe and plan.' : 'We’ll send a secure link to reset your Nett password.'}</p>
       <form onSubmit={submit} className="auth-form">
-        {mode === 'signup' && <label>Your name<input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Rohith" /></label>}
-        <label>Email<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label>
-        <label>Password<input required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" /></label>
-        <button className="primary-button full" disabled={loading}>{loading ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create private account'}</button>
+        {mode === 'signup' && <label>Your name<input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" autoComplete="name" /></label>}
+        <label>Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" /></label>
+        {mode !== 'reset' && <label>Password<input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} /></label>}
+        <button className="primary-button full" disabled={loading}>{loading ? 'Working…' : mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create private account' : 'Send reset link'}</button>
       </form>
       {message && <div className="form-message"><Check size={16} /> {message}</div>}
-      <button className="switch-auth" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setMessage(''); }}>{mode === 'login' ? 'New to Nett? Create an account' : 'Already have an account? Sign in'}</button>
+      {mode === 'login' && <button className="switch-auth subtle" onClick={reset}>Forgot your password?</button>}
+      {mode !== 'reset' && <button className="switch-auth" onClick={switchMode}>{mode === 'login' ? 'New to Nett? Create an account' : 'Already have an account? Sign in'}</button>}
+      {mode === 'reset' && <button className="switch-auth" onClick={() => { setMode('login'); setMessage(''); }}>Back to sign in</button>}
       <div className="security-note"><LockKeyhole size={15} /> Your data is isolated with database-level security.</div>
     </div>
   </main>;
