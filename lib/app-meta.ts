@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Offline-ready financial entry',
-    commit: 'pending push',
+    commit: '9eede0e',
     summary: 'The installed Nett experience now has an offline shell and a compatibility path while the new financial migration is being applied.',
     changes: [
       'Added service-worker caching and update cleanup for standalone PWA use.',
