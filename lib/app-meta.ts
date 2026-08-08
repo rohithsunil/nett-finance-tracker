@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Signup entry fix',
-    commit: 'PENDING',
+    commit: 'c1393a2',
     summary: 'The public entry route now opens the account-creation state reliably after hydration.',
     changes: [
       'Fixed the `/login?mode=signup` redirect so new visitors see the signup form instead of sign in.',

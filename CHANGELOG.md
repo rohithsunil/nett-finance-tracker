@@ -2,7 +2,7 @@
 
 ## 1.2.1 — 2026-08-08 — Signup entry fix
 
-GitHub commit: `PENDING`
+GitHub commit: [`c1393a2`](https://github.com/rohithsunil/nett-finance-tracker/commit/c1393a2)
 
 - Fixed the `/login?mode=signup` redirect so new visitors see the signup form instead of sign in.
 
