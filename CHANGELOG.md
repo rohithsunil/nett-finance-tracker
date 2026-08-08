@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.4.2 — 2026-08-08 — Space management fix
+
+GitHub commit: `pending`
+
+- Added Edit and Delete actions for Spaces on the Plan screen.
+- Added a delete confirmation; linked transactions remain in Activity while the Space is archived.
+- Added persisted edits for Space details and corrected workspace scoping.
+
 ## 1.4.1 — 2026-08-08 — Country transfer & trust polish
 
 GitHub commit: [`3902120`](https://github.com/rohithsunil/nett-finance-tracker/commit/3902120)

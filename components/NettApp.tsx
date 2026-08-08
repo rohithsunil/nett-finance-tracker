@@ -8,7 +8,7 @@ import {
   CircleHelp, CirclePlus, CreditCard, Download, Eye, EyeOff, FileSpreadsheet, Filter, Gauge,
   CircleDollarSign, GitCommitHorizontal, Home, Landmark, LayoutGrid, LineChart, ListFilter, LockKeyhole, LogIn, Menu, MoreHorizontal,
   MoveRight, Plus, RefreshCw, Search, Settings2, ShieldCheck, Sparkles, Target, TrendingDown,
-  Pencil, TrendingUp, Upload, Wallet, X, Zap,
+  Pencil, Trash2, TrendingUp, Upload, Wallet, X, Zap,
 } from 'lucide-react';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import { calculateMetrics, debtProgress, displayAmount, formatCurrency, formatShortDate, hasFxRate, isStale } from '@/lib/finance';
@@ -18,7 +18,7 @@ import NettLogo from '@/components/NettLogo';
 import type { Account, Commitment, CreditCard as CreditCardRecord, Debt, Investment, InvestmentValue, NettData, Receivable, Space, Theme, Transaction } from '@/lib/types';
 
 type Tab = 'home' | 'accounts' | 'activity' | 'plan' | 'more';
-type Modal = 'account' | 'move-account-country' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'import' | null;
+type Modal = 'account' | 'move-account-country' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'import' | null;
 
 const navItems: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: 'home', label: 'Home', icon: Home },
@@ -142,6 +142,8 @@ export default function NettApp() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [movingAccount, setMovingAccount] = useState<Account | null>(null);
+  const [editingSpace, setEditingSpace] = useState<Space | null>(null);
+  const [deletingSpace, setDeletingSpace] = useState<Space | null>(null);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [theme, setTheme] = useState<Theme>('system');
@@ -158,6 +160,7 @@ export default function NettApp() {
     investments: data.investments.filter((item) => item.workspace_id === workspace),
     commitments: data.commitments.filter((item) => item.workspace_id === workspace),
     reserves: data.reserves.filter((item) => item.workspace_id === workspace),
+    spaces: data.spaces.filter((item) => item.workspace_id === workspace),
     transactions: data.transactions.filter((item) => item.workspace_id === workspace),
   });
   const scoped = country === 'all' ? scopedBase : {
@@ -394,10 +397,27 @@ export default function NettApp() {
     setData((current) => ({ ...current, workspaces: [...current.workspaces, item] })); setWorkspace(item.id); setModal(null); notify(`${item.name} workspace created.`);
   }
 
-  async function createSpace(form: HTMLFormElement) {
-    const values = new FormData(form); const item: Space = { id: crypto.randomUUID(), workspace_id: String(values.get('workspace_id')), name: String(values.get('name')).trim(), color: String(values.get('color') || '#ff8dc7'), budget: Number(values.get('budget') || 0) || null, allocation: Number(values.get('allocation') || 0) || null, currency: String(values.get('currency')), notes: String(values.get('notes') || '') || null };
-    if (!session) return; const supabase = getSupabaseBrowser(); if (supabase) { const { error } = await insertWithLegacyFallback(supabase, 'spaces', { user_id: session.userId, ...item }, { user_id: session.userId, ...item }); if (error) { notify(`Could not save Space: ${error.message}`); return; } }
-    setData((current) => ({ ...current, spaces: [...current.spaces, item] })); setModal(null); notify(`${item.name} Space created.`);
+  async function saveSpace(form: HTMLFormElement) {
+    const values = new FormData(form); const item: Space = { id: editingSpace?.id || crypto.randomUUID(), workspace_id: String(values.get('workspace_id')), name: String(values.get('name')).trim(), color: String(values.get('color') || '#ff8dc7'), budget: Number(values.get('budget') || 0) || null, allocation: Number(values.get('allocation') || 0) || null, currency: String(values.get('currency')), notes: String(values.get('notes') || '') || null };
+    if (!session) { notify('Sign in before saving a Space.'); return; }
+    const supabase = getSupabaseBrowser();
+    if (supabase) {
+      const result = editingSpace
+        ? await supabase.from('spaces').update({ workspace_id: item.workspace_id, name: item.name, color: item.color, budget: item.budget, allocation: item.allocation, currency: item.currency, notes: item.notes }).eq('id', item.id).eq('user_id', session.userId)
+        : await insertWithLegacyFallback(supabase, 'spaces', { user_id: session.userId, ...item }, { user_id: session.userId, ...item });
+      if (result.error) { notify(`Could not save Space: ${result.error.message}`); return; }
+    }
+    setData((current) => ({ ...current, spaces: editingSpace ? current.spaces.map((space) => space.id === item.id ? item : space) : [...current.spaces, item] })); setModal(null); setEditingSpace(null); notify(`${item.name} Space ${editingSpace ? 'updated' : 'created'}.`);
+  }
+
+  async function deleteSpace(space: Space) {
+    if (!session) { notify('Sign in before deleting a Space.'); return; }
+    const supabase = getSupabaseBrowser();
+    if (supabase) {
+      const { error } = await supabase.from('spaces').update({ archived: true }).eq('id', space.id).eq('user_id', session.userId);
+      if (error) { notify(`Could not delete Space: ${error.message}`); return; }
+    }
+    setData((current) => ({ ...current, spaces: current.spaces.filter((item) => item.id !== space.id) })); setModal(null); setDeletingSpace(null); notify(`${space.name} Space deleted.`);
   }
 
   async function createInvestment(form: HTMLFormElement) {
@@ -496,6 +516,7 @@ export default function NettApp() {
       {tab === 'accounts' && <AccountsViewV3 data={scoped} displayCurrency={comparisonCurrency} onQuick={(next) => setModal(next)} onEdit={(account) => { setEditingAccount(account); setModal('account'); }} onMove={(account) => { setMovingAccount(account); setModal('move-account-country'); }} />}
       {tab === 'activity' && <ActivityViewV3 data={scoped} displayCurrency={displayCurrency} country={country} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} search={search} setSearch={setSearch} onQuick={(next) => setModal(next)} />}
       {tab === 'plan' && <PlanViewV2 data={scoped} metrics={metrics} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} whatIf={whatIf} setWhatIf={setWhatIf} whatIfResult={whatIfResult} runWhatIf={runWhatIf} />}
+      {tab === 'plan' && <SpaceManagerPanel data={scoped} onAdd={() => { setEditingSpace(null); setModal('space'); }} onEdit={(space) => { setEditingSpace(space); setModal('space'); }} onDelete={(space) => { setDeletingSpace(space); setModal('delete-space'); }} />}
       {tab === 'more' && <MoreView data={data} theme={theme} setTheme={updateTheme} pushEnabled={pushEnabled} enableNotifications={enableNotifications} exportData={exportData} exportCsv={exportCsv} exportXlsx={exportXlsx} session={!!session} onQuick={(next) => setModal(next)} />}
     </main>
     <button className="mobile-quick-add" aria-label="Quick add" onClick={() => setModal('transaction')}><Plus size={22} /></button><nav className="mobile-nav">{navItems.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}><Icon size={17} /><span>{label}</span></button>)}</nav>
@@ -513,7 +534,8 @@ export default function NettApp() {
     {modal === 'investment' && <InvestmentModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createInvestment} />}
     {modal === 'reserve' && <ReserveModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createReserve} />}
     {modal === 'workspace' && <WorkspaceModal onClose={() => setModal(null)} onSave={createWorkspace} />}
-    {modal === 'space' && <SpaceModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createSpace} />}
+    {modal === 'space' && <SpaceModal space={editingSpace} workspaces={data.workspaces} onClose={() => { setModal(null); setEditingSpace(null); }} onSave={saveSpace} />}
+    {modal === 'delete-space' && deletingSpace && <DeleteSpaceModal space={deletingSpace} onClose={() => { setModal(null); setDeletingSpace(null); }} onDelete={() => void deleteSpace(deletingSpace)} />}
     {modal === 'import' && <ImportModal workspaces={data.workspaces} onClose={() => setModal(null)} onImport={importAccounts} />}
     {toast && <div className="toast"><Sparkles size={16} /> {toast}</div>}
   </div>;
@@ -578,6 +600,10 @@ function ActivityViewV2({ data, displayCurrency, search, setSearch, onQuick }: {
 function ActivityView({ data, displayCurrency, search, setSearch }: { data: NettData; displayCurrency: string; search: string; setSearch: (value: string) => void }) {
   const filtered = data.transactions.filter((item) => `${item.category} ${item.description} ${item.currency}`.toLowerCase().includes(search.toLowerCase()));
   return <div className="page-panel"><div className="view-header"><div><h2>Activity</h2><p>A selective ledger, not a guilt machine.</p></div><div className="filter-pills"><button className="selected"><Filter size={12} /> All activity</button><button>Personal</button><button>Business</button></div></div><div className="card full-card"><div className="search-row"><div className="search-field"><Search size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search Dad, car, insurance…" /></div><button className="soft-button"><ListFilter size={15} /> Filters</button></div>{filtered.length ? filtered.map((item) => <ActivityRow key={item.id} transaction={item} displayCurrency={displayCurrency} rates={data.fxRates} />) : <div className="empty-state"><Search size={21} /><strong>No matching activity</strong><span>Try a person, category or description.</span></div>}</div></div>;
+}
+
+function SpaceManagerPanel({ data, onAdd, onEdit, onDelete }: { data: NettData; onAdd: () => void; onEdit: (space: Space) => void; onDelete: (space: Space) => void }) {
+  return <section className="card full-card space-manager-panel"><div className="card-header" style={{ padding: 0 }}><div><h2 className="card-title">Spaces</h2><div className="card-meta">Goals and budgets you can update or remove anytime.</div></div><button className="primary-button" onClick={onAdd}><Plus size={14} /> Add Space</button></div>{data.spaces.length ? <div className="space-grid">{data.spaces.map((space) => <article className="space-card" key={space.id} style={{ borderTopColor: space.color || '#ff8dc7' }}><div className="space-card-top"><div><strong>{space.name}</strong><small>{space.currency} · {space.budget ? `Budget ${formatCurrency(Number(space.budget), space.currency, true)}` : 'No budget set'}</small></div><div className="space-actions"><button className="edit-account-button" onClick={() => onEdit(space)} aria-label={`Edit ${space.name}`}><Pencil size={13} /> Edit</button><button className="icon-button danger-icon" onClick={() => onDelete(space)} aria-label={`Delete ${space.name}`}><Trash2 size={14} /></button></div></div><div className="space-amount">{formatCurrency(Number(space.allocation || 0), space.currency, true)} <span>allocated</span></div>{space.notes && <p className="space-notes">{space.notes}</p>}</article>)}</div> : <div className="empty-state compact"><Target size={20} /><strong>No Spaces yet</strong><span>Create a goal or budget for travel, rent, taxes or anything you want to keep visible.</span><button className="soft-button" onClick={onAdd}><Plus size={14} /> Create your first Space</button></div>}</section>;
 }
 
 function PlanViewV2({ data, metrics, displayCurrency, onQuick, whatIf, setWhatIf, whatIfResult, runWhatIf }: { data: NettData; metrics: ReturnType<typeof calculateMetrics>; displayCurrency: string; onQuick: (modal: Modal) => void; whatIf: string; setWhatIf: (value: string) => void; whatIfResult: number | null; runWhatIf: () => void }) {
@@ -663,6 +689,8 @@ function ReserveModal({ workspaces, onClose, onSave }: { workspaces: NettData['w
 
 function WorkspaceModal({ onClose, onSave }: { onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title="New workspace" description="Keep personal and business money separate while retaining one total view." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label className="full-span">Workspace name<input name="name" required placeholder="Freelance studio" /></label><label className="full-span">Type<select name="kind" defaultValue="business"><option value="business">Business</option><option value="personal">Personal</option><option value="other">Other</option></select></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><BriefcaseBusiness size={15} /> Create workspace</button></div></form></ModalShell>; }
 
-function SpaceModal({ workspaces, onClose, onSave }: { workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title="Create a Space" description="Give a goal or budget its own calm mini-ledger." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label className="full-span">Name<input name="name" required placeholder="Holiday, rent, tax buffer…" /></label><label>Budget<input name="budget" type="number" min="0" step="0.01" /></label><label>Allocated<input name="allocation" type="number" min="0" step="0.01" /></label><label>Currency<select name="currency" defaultValue="AED"><option>AED</option><option>INR</option><option>USD</option></select></label><label>Colour<input name="color" type="color" defaultValue="#ff8dc7" /></label><label>Workspace<select name="workspace_id" required defaultValue={workspaces[0]?.id}>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="full-span">Notes<textarea name="notes" rows={2} /></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Target size={15} /> Create Space</button></div></form></ModalShell>; }
+function SpaceModal({ space, workspaces, onClose, onSave }: { space: Space | null; workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title={space ? 'Edit Space' : 'Create a Space'} description="Give a goal or budget its own calm mini-ledger." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label className="full-span">Name<input name="name" required defaultValue={space?.name || ''} placeholder="Holiday, rent, tax buffer…" /></label><label>Budget<input name="budget" type="number" min="0" step="0.01" defaultValue={space?.budget ?? ''} /></label><label>Allocated<input name="allocation" type="number" min="0" step="0.01" defaultValue={space?.allocation ?? ''} /></label><label>Currency<select name="currency" defaultValue={space?.currency || 'AED'}><option>AED</option><option>INR</option><option>USD</option></select></label><label>Colour<input name="color" type="color" defaultValue={space?.color || '#ff8dc7'} /></label><label>Workspace<select name="workspace_id" required defaultValue={space?.workspace_id || workspaces[0]?.id}>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="full-span">Notes<textarea name="notes" rows={2} defaultValue={space?.notes || ''} /></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Target size={15} /> {space ? 'Save changes' : 'Create Space'}</button></div></form></ModalShell>; }
+
+function DeleteSpaceModal({ space, onClose, onDelete }: { space: Space; onClose: () => void; onDelete: () => void }) { return <ModalShell title={`Delete ${space.name}?`} description="Transactions linked to this Space will stay in your activity history, but the Space itself will be removed from your plan." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>This cannot be undone from the app.</strong><span>Your account data remains private and only this Space is archived.</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep Space</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete Space</button></div></ModalShell>; }
 
 function urlBase64ToUint8Array(base64String: string) { const padding = '='.repeat((4 - base64String.length % 4) % 4); const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/'); const rawData = window.atob(base64); return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0))); }

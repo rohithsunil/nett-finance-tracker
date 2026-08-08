@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.4.1';
+export const APP_VERSION = '1.4.2';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,15 +15,14 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
-    title: 'Country transfer & trust polish',
-    commit: '3902120',
-    summary: 'Nett now makes moving an account between countries explicit, and surfaces financial attention states more honestly.',
+    title: 'Space management fix',
+    commit: 'pending',
+    summary: 'Spaces can now be edited, deleted safely and kept correctly scoped to the active workspace.',
     changes: [
-      'Added a dedicated Move country action on every account with a confirmation that explains how linked activity will be reclassified.',
-      'Added visible FX context with a selectable comparison currency and conversion rate source.',
-      'Added mobile country, workspace and total-currency controls so UAE, India and combined net worth are always one tap away.',
-      'Added month-scoped expense summaries for expenses, income and net cash flow, with activity filtered through the linked account country.',
-      'Made negative Safe to Spend states explicit and improved empty monthly activity guidance for both expenses and income.',
+      'Added a dedicated Space management panel with edit and delete actions.',
+      'Added a confirmation step before deletion; linked transactions remain in Activity while the Space is archived.',
+      'Added persisted Space edits for names, budgets, allocations, colours, currencies, notes and workspaces.',
+      'Fixed workspace scoping so Spaces from other workspaces stay out of the current Plan view.',
     ],
   },
   {
