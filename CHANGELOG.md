@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.4.3 — 2026-08-08 — Accounts clarity pass
+
+GitHub commit: `pending`
+
+- Removed repeated per-account FX rate labels; the FX context bar is now the single source of truth.
+- Reworked account cards with clearer identity, country, local balance, converted amount and actions.
+- Removed the duplicate Accounts heading and added a compact account-context row.
+
 ## 1.4.2 — 2026-08-08 — Space management fix
 
 GitHub commit: [`58cf282`](https://github.com/rohithsunil/nett-finance-tracker/commit/58cf282)

@@ -159,12 +159,12 @@ html[data-theme='system'] { color-scheme: light; }
 .compact-action { margin-top:7px; padding-top:8px; padding-bottom:8px; }
 .mobile-context { display:none; align-items:center; gap:7px; color:var(--muted); font-size:11px; margin-bottom:7px; }
 .action-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.account-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
-.account-detail-card { min-width:0; padding:17px; border:1px solid var(--line); border-top:3px solid #d39be4; border-radius:17px; background:linear-gradient(145deg,#fff,#fafafd); }
+.accounts-board { padding:22px; }.accounts-board-note { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:20px; border-bottom:1px solid var(--line); }.accounts-board-note strong { display:block; font-size:14px; }.accounts-board-note span:not(.status-chip) { display:block; margin-top:4px; color:var(--muted); font-size:10px; }.accounts-board-note .status-chip { white-space:nowrap; }
+.account-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; padding-top:20px; }
+.account-detail-card { min-width:0; padding:17px; border:1px solid var(--line); border-top:3px solid #d39be4; border-radius:17px; background:linear-gradient(145deg,#fff,#fafafd); box-shadow:0 8px 24px rgba(55,37,66,.035); }
 .account-detail-top, .account-detail-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .account-detail-name { margin-top:17px; font-size:15px; font-weight:650; }
-.account-detail-balance { margin-top:18px; font-size:23px; letter-spacing:-.05em; font-weight:650; }
-.account-detail-actions { justify-content:flex-start; margin-top:13px; }
+.account-detail-balance { margin-top:0; font-size:24px; letter-spacing:-.05em; font-weight:650; }.account-balance-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-top:20px; }.account-converted-balance { color:var(--muted); font-size:10px; white-space:nowrap; }.account-detail-actions { justify-content:flex-start; margin-top:15px; }.account-card-spacer { flex:1; }
 .card-list { display:grid; gap:8px; margin-top:16px; }
 .space-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px; }
 .space-card { padding:16px; border:1px solid var(--line); border-top:3px solid #ff8dc7; border-radius:16px; background:var(--surface-muted); }
@@ -200,8 +200,8 @@ html[data-theme='system'] { color-scheme: light; }
 @media (max-width:720px) { .empty-home { margin-top:7vh; padding:34px 22px; }.empty-home h2 { font-size:28px; }.onboarding-shell { padding:14px; }.onboarding-card { padding:23px 20px; border-radius:24px; }.onboarding-card h1 { font-size:30px; }.changelog-shell { padding:24px 16px 45px; }.changelog-entry { padding:20px; }.changelog-entry-top { align-items:flex-start; flex-direction:column; gap:10px; } }
 
 /* Nett 1.4 mobile context, account identity and accessibility pass */
-.topbar-page { justify-content:flex-end; margin-bottom:14px; }
-.topbar-page > div:first-child { min-height:1px; }
+.topbar-page { justify-content:flex-end; margin-bottom:18px; }
+.topbar-page > div:first-child { display:none; }
 .rate-context { max-width:1370px; margin:-12px auto 18px; display:flex; align-items:center; gap:11px; padding:10px 13px; border:1px solid var(--line); border-radius:15px; background:var(--surface); box-shadow:0 8px 24px rgba(30,24,38,.04); }
 .rate-icon { width:28px; height:28px; display:grid; place-items:center; flex:none; border-radius:9px; color:#9c5bb7; background:#fbf0fa; }
 .rate-copy { display:grid; gap:2px; min-width:0; flex:1; }.rate-copy strong { font-size:12px; letter-spacing:-.01em; }.rate-copy span { color:var(--muted); font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -249,5 +249,5 @@ html[data-theme='amoled'] { --bg:#000; --surface:#09090b; --surface-muted:#11111
   .view-header { gap:12px; }.view-header .action-row { width:100%; }.view-header .action-row > .soft-button, .view-header .action-row > .primary-button { flex:1; min-width:0; }.month-picker { flex:1; }.month-picker input { width:100%; }
   .month-summary-bar { padding:16px 18px 4px; }.month-summary-value { font-size:16px; }.month-stats .stat-card { min-height:108px; }
   .mobile-nav { bottom:calc(16px + env(safe-area-inset-bottom)); }.mobile-quick-add { bottom:calc(105px + env(safe-area-inset-bottom)); }
-  .account-detail-actions { flex-wrap:wrap; }.edit-account-button { margin-left:auto; }.account-logo-editor { align-items:flex-start; }
+  .accounts-board { padding:15px; }.accounts-board-note { align-items:flex-start; flex-direction:column; gap:10px; padding-bottom:15px; }.accounts-board-note .status-chip { align-self:flex-start; }.account-detail-grid { padding-top:15px; }.account-detail-card { padding:16px; }.account-balance-row { align-items:flex-start; flex-direction:column; gap:4px; margin-top:18px; }.account-detail-actions { flex-wrap:wrap; }.account-detail-actions .edit-account-button { margin-left:0; }.account-card-spacer { flex:1; min-width:20px; }.account-logo-editor { align-items:flex-start; }
 }

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.4.2';
+export const APP_VERSION = '1.4.3';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,14 +15,14 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
-    title: 'Space management fix',
-    commit: '58cf282',
-    summary: 'Spaces can now be edited, deleted safely and kept correctly scoped to the active workspace.',
+    title: 'Accounts clarity pass',
+    commit: 'pending',
+    summary: 'The Accounts page now has a clearer hierarchy and keeps FX context in one place instead of repeating it on every card.',
     changes: [
-      'Added a dedicated Space management panel with edit and delete actions.',
-      'Added a confirmation step before deletion; linked transactions remain in Activity while the Space is archived.',
-      'Added persisted Space edits for names, budgets, allocations, colours, currencies, notes and workspaces.',
-      'Fixed workspace scoping so Spaces from other workspaces stay out of the current Plan view.',
+      'Removed repeated per-account FX rate labels; the FX context bar is now the single source of truth.',
+      'Reworked account cards with clearer identity, country, local balance, converted amount and actions.',
+      'Removed the duplicate Accounts heading and added a compact account-context row.',
+      'Kept account movement and editing actions visible without crowding the balance hierarchy.',
     ],
   },
   {
