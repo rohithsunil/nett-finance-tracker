@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Email confirmation handoff',
-    commit: 'PENDING',
+    commit: 'f5a6220',
     summary: 'Email confirmation now returns people to a clear sign-in state instead of the app root.',
     changes: [
       'Redirected successful email confirmations to login with an “Email verified” notification.',
