@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.7.0';
-export const RELEASE_DATE = '2026-08-08';
+export const APP_VERSION = '1.8.0';
+export const RELEASE_DATE = '2026-08-14';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
 export type ChangelogEntry = {
@@ -14,6 +14,19 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Reference navigation release',
+    commit: 'ea41d7e',
+    summary: 'Nett now has a calmer, reference-style information architecture for desktop and mobile, without losing its country-aware finance model.',
+    changes: [
+      'Added first-class Dashboard, Accounts, Pots, Loans, Holdings, Bills, Spends, Activity and Settings surfaces to the desktop sidebar.',
+      'Renamed Banking to Accounts and added a visible country filter so UAE, India and other account groups can be reviewed separately.',
+      'Added focused cards and actions for pots, partial loan payments, receivables, holdings, upcoming bills and purpose-led spend trackers using the existing saved data.',
+      'Aligned desktop sidebar states, Settings labelling, responsive cards and mobile-safe layouts with the simpler reference interaction model.',
+    ],
+  },
+  {
+    version: '1.7.0',
     date: '2026-08-14',
     title: 'Simpler finance cockpit',
     commit: 'ac90512',
