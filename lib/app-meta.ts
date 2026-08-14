@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.7.0';
 export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,15 +15,15 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: '2026-08-14',
-    title: 'Focused finance workspace',
-    commit: 'fc46578',
-    summary: 'Nett now puts the next useful action in reach on every screen, with a calmer mobile cockpit and a single focused Plan workspace.',
+    title: 'Simpler finance cockpit',
+    commit: 'ac90512',
+    summary: 'Nett now follows a simpler dashboard model inspired by the best personal finance apps, with a calm mobile home and a clearer desktop cockpit.',
     changes: [
-      'Reworked Plan into Overview, Debts & loans, Future costs, Owed to you and Spaces sections without removing any existing workflow.',
-      'Added clearer debt progress, partial-payment entry points, commitment management, reserve progress and Space edit/delete controls.',
-      'Replaced the stacked mobile workspace selects with a compact context sheet for workspace, country and total currency.',
-      'Limited the FX rate banner to Home and Accounts so conversion context stays visible without repeating across every screen.',
-      'Polished Accounts hierarchy, mobile safe-area spacing, bottom navigation and dark/AMOLED surfaces for more native-feeling use.',
+      'Rebuilt the mobile Home screen around one net-worth card, income and expense summaries, overview shortcuts, recent activity and upcoming items.',
+      'Reduced the mobile app shell to four predictable destinations: Home, Activity, Banking and Account, while keeping Plan reachable from the home and account surfaces.',
+      'Reworked the desktop Home screen into a two-column cockpit with persistent sidebar navigation, grouped currency balances, upcoming commitments and recent activity.',
+      'Removed the duplicate Settings entry from the desktop sidebar and clarified Banking and Account labels.',
+      'Kept Nett branding, country-aware balances, FX conversion, debts, Spaces, investments, commitments, PWA safe areas and dark/AMOLED themes intact.',
     ],
   },
   {
