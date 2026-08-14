@@ -1,5 +1,5 @@
 export const APP_VERSION = '1.6.0';
-export const RELEASE_DATE = '2026-08-14';
+export const RELEASE_DATE = '2026-08-08';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
 export type ChangelogEntry = {
@@ -14,7 +14,7 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
-    date: RELEASE_DATE,
+    date: '2026-08-14',
     title: 'Focused finance workspace',
     commit: 'fc46578',
     summary: 'Nett now puts the next useful action in reach on every screen, with a calmer mobile cockpit and a single focused Plan workspace.',
@@ -27,7 +27,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.5.1',
     date: '2026-08-09',
     title: 'Plan item controls',
     commit: '33872fe',
