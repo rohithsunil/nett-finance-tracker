@@ -1,5 +1,14 @@
 # Nett release notes
 
+## 1.6.0 - 2026-08-14 - Focused finance workspace
+
+GitHub commit: [`fc46578`](https://github.com/rohithsunil/nett-finance-tracker/commit/fc46578)
+
+- Reworked Plan into focused Overview, Debts & loans, Future costs, Owed to you and Spaces sections.
+- Added clearer debt progress, partial-payment entry points, commitment management, reserve progress and Space edit/delete controls.
+- Replaced stacked mobile context selects with a compact workspace, country and total-currency sheet.
+- Limited the FX rate banner to Home and Accounts and polished safe-area, bottom navigation and dark/AMOLED surfaces.
+
 ## 1.5.1 - 2026-08-09 - Plan item controls
 
 GitHub commit: [`33872fe`](https://github.com/rohithsunil/nett-finance-tracker/commit/33872fe)

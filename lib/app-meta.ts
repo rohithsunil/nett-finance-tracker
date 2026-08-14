@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.5.1';
-export const RELEASE_DATE = '2026-08-08';
+export const APP_VERSION = '1.6.0';
+export const RELEASE_DATE = '2026-08-14';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
 export type ChangelogEntry = {
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Focused finance workspace',
+    commit: 'fc46578',
+    summary: 'Nett now puts the next useful action in reach on every screen, with a calmer mobile cockpit and a single focused Plan workspace.',
+    changes: [
+      'Reworked Plan into Overview, Debts & loans, Future costs, Owed to you and Spaces sections without removing any existing workflow.',
+      'Added clearer debt progress, partial-payment entry points, commitment management, reserve progress and Space edit/delete controls.',
+      'Replaced the stacked mobile workspace selects with a compact context sheet for workspace, country and total currency.',
+      'Limited the FX rate banner to Home and Accounts so conversion context stays visible without repeating across every screen.',
+      'Polished Accounts hierarchy, mobile safe-area spacing, bottom navigation and dark/AMOLED surfaces for more native-feeling use.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: '2026-08-09',
