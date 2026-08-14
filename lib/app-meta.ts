@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.8.0';
+export const APP_VERSION = '1.8.1';
 export const RELEASE_DATE = '2026-08-14';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Debit-card account surfaces',
+    commit: '83885e4',
+    summary: 'Account balances now sit inside calmer debit-card-inspired surfaces that make each bank account easier to scan and manage.',
+    changes: [
+      'Removed the distracting purple account-card rail and replaced it with a neutral card edge and soft embossed highlight.',
+      'Separated account actions into a clear lower footer so Move, Edit and Delete feel intentional instead of crowded into the balance area.',
+      'Kept the treatment readable across light, dark and AMOLED themes, including the mobile one-column layout.',
+    ],
+  },
+  {
+    version: '1.8.0',
     date: RELEASE_DATE,
     title: 'Reference navigation release',
     commit: 'ea41d7e',
