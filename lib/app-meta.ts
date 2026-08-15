@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.8.1';
-export const RELEASE_DATE = '2026-08-14';
+export const APP_VERSION = '1.9.0';
+export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
 export type ChangelogEntry = {
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Native-feeling responsive shell',
+    commit: 'c9e07be',
+    summary: 'A full UI/UX system pass makes Nett easier to scan, tap and use across compact phones, installed PWA mode, tablets and desktop browsers.',
+    changes: [
+      'Made the desktop sidebar independently scrollable and kept the main workspace stable across short laptop and large monitor heights.',
+      'Standardized 44px touch targets, visible keyboard focus, readable mobile type, safe-area padding and keyboard-friendly forms across shared surfaces.',
+      'Reworked mobile sheets and dialogs with modern viewport sizing, a clear drag affordance, sticky actions and Escape/ARIA support.',
+      'Removed the portrait-only PWA constraint and refreshed the installed-app scope so landscape and browser experiences behave predictably.',
+      'Persisted the Nett UI/UX design direction for future screens without replacing the existing lotus identity or multi-currency finance features.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
