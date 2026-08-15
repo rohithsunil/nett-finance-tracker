@@ -7,6 +7,8 @@ export const emptyData: NettData = {
     display_currency: 'AED',
     theme: 'system',
     freshness_days: 31,
+    enabled_countries: ['AE', 'IN'],
+    enabled_currencies: ['AED', 'INR'],
   },
   workspaces: [],
   accounts: [],

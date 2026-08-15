@@ -10,6 +10,8 @@ export interface Profile {
   display_currency: Currency;
   theme: Theme;
   freshness_days: number;
+  enabled_countries?: CountryCode[] | null;
+  enabled_currencies?: Currency[] | null;
 }
 
 export interface Workspace {

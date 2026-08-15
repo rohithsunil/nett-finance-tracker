@@ -550,3 +550,46 @@ textarea { min-height:112px; }
 @media (prefers-reduced-motion:reduce) {
   *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }
+
+/* Nett 1.10: the view context belongs with the page, not inside the sidebar. */
+.desktop-sidebar > select, .desktop-sidebar .context-row { display:none !important; }
+.app-shell p, .app-shell small, .app-shell label, .app-shell .card-meta, .app-shell .card-kicker,
+.app-shell .stat-top, .app-shell .stat-note, .app-shell .safe-sub, .app-shell .status-chip,
+.app-shell .pill, .app-shell .table-muted, .app-shell .activity-desc, .app-shell .activity-time,
+.app-shell .account-type, .app-shell .account-converted, .app-shell .account-meta-line,
+.app-shell .reference-card-label, .app-shell .reference-card-meta, .app-shell .reference-card-footer,
+.app-shell .desktop-section-heading p, .app-shell .desktop-empty-copy, .app-shell .desktop-monthly-split span,
+.app-shell .desktop-safe-card p, .app-shell .desktop-safe-card > div:last-child { font-size:14px; line-height:1.45; }
+.app-shell .nav-section-label { font-size:12px; }
+.app-shell .brand-sub, .app-shell .version-link, .app-shell .eyebrow, .app-shell .desktop-eyebrow { font-size:12px; }
+.app-shell button { font-size:14px; }
+.rate-select { display:grid; gap:5px; align-items:end; color:var(--muted); font-size:14px; }
+.rate-currency-buttons { display:flex; flex-wrap:wrap; gap:6px; }
+.rate-currency-buttons button { min-height:36px; padding:0 10px; border:1px solid var(--line); border-radius:10px; color:var(--muted); background:var(--surface-muted); font-size:14px; }
+.rate-currency-buttons button.selected { color:#63328f; border-color:#d7b8e8; background:#f6edfc; font-weight:650; }
+.context-toolbar { display:grid; grid-template-columns:minmax(190px,.75fr) minmax(250px,1.2fr) minmax(250px,1.3fr) minmax(150px,.7fr); gap:18px; align-items:center; max-width:var(--content-max); margin:0 auto 18px; padding:16px 18px; border:1px solid var(--line); border-radius:20px; background:var(--surface); box-shadow:0 10px 30px rgba(35,27,43,.05); }
+.context-toolbar-title { display:grid; gap:4px; min-width:0; }
+.context-toolbar-title .eyebrow { margin-bottom:2px; }
+.context-toolbar-title strong { font-size:16px; letter-spacing:-.02em; }
+.context-toolbar-title > span:last-child { color:var(--muted); font-size:14px; line-height:1.4; }
+.context-toolbar-group { display:grid; gap:8px; min-width:0; }
+.context-toolbar-group > span { color:var(--muted); font-size:14px; font-weight:600; }
+.context-chip-list { display:flex; flex-wrap:wrap; gap:7px; }
+.context-chip-list button, .preference-chips button { min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 12px; border:1px solid var(--line); border-radius:12px; color:var(--muted); background:var(--surface-muted); font-size:14px; white-space:nowrap; }
+.context-chip-list button:hover, .preference-chips button:hover { border-color:#d5bce7; color:var(--ink); }
+.context-chip-list button.selected, .preference-chips button.selected { color:#63328f; border-color:#d7b8e8; background:#f6edfc; font-weight:650; box-shadow:0 5px 13px rgba(130,82,158,.08); }
+.context-chip-list svg { flex:none; }
+.country-badge { display:inline-flex; align-items:center; gap:7px; }
+.country-badge svg, .context-chip-list svg { flex:none; border-radius:3px; box-shadow:0 0 0 1px rgba(20,20,24,.08); }
+.view-preferences { margin-bottom:20px; padding:22px 24px; }
+.preference-group { display:grid; grid-template-columns:minmax(170px,.42fr) minmax(0,1fr); gap:20px; align-items:start; padding-top:20px; }
+.preference-group > div:first-child { display:grid; gap:4px; }
+.preference-group strong { font-size:15px; }
+.preference-group span { color:var(--muted); font-size:14px; line-height:1.45; }
+.preference-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.preference-reset { margin-top:18px; padding:0; border:0; background:none; }
+html[data-theme='dark'] .context-toolbar, html[data-theme='amoled'] .context-toolbar, html[data-theme='dark'] .view-preferences, html[data-theme='amoled'] .view-preferences { background:var(--surface); border-color:var(--line); }
+html[data-theme='dark'] .context-chip-list button, html[data-theme='amoled'] .context-chip-list button, html[data-theme='dark'] .preference-chips button, html[data-theme='amoled'] .preference-chips button { background:var(--surface-muted); border-color:var(--line); }
+html[data-theme='dark'] .context-chip-list button.selected, html[data-theme='amoled'] .context-chip-list button.selected, html[data-theme='dark'] .preference-chips button.selected, html[data-theme='amoled'] .preference-chips button.selected { color:#efc4ff; background:#31243a; border-color:#594164; }
+@media (max-width:1180px) and (min-width:721px) { .context-toolbar { grid-template-columns:1fr 1fr; }.context-toolbar-title { grid-column:1 / -1; } }
+@media (max-width:720px) { .context-toolbar { display:none; }.rate-select span { display:block; }.rate-currency-buttons button { min-height:40px; }.view-preferences { padding:18px; }.preference-group { grid-template-columns:1fr; gap:10px; }.preference-chips { gap:7px; }.preference-chips button { flex:1 1 calc(50% - 7px); } }
