@@ -20,6 +20,7 @@ export const demoData: NettData = {
   receivables: [
     { id: 'alina', workspace_id: 'personal', contact_name: 'Alina Ho', amount: 8475, outstanding: 8475, currency: 'AED', expected_on: '2026-08-12', confidence: 'confirmed', include_in_net_worth: false, status: 'open' },
   ],
+  receivableEvents: [],
   investments: [
     { id: 'nvda', workspace_id: 'personal', symbol: 'NVDA', exchange: 'NASDAQ', name: 'NVIDIA', quantity: 4, holding_currency: 'USD', average_cost: 112, liquid: true, latest_value: 694, latest_value_at: '2026-07-31T08:00:00Z' },
     { id: 'reliance', workspace_id: 'personal', symbol: 'RELIANCE', exchange: 'NSE', name: 'Reliance Industries', quantity: 12, holding_currency: 'INR', average_cost: 2800, liquid: false, latest_value: 38200, latest_value_at: '2026-07-30T08:00:00Z' },

@@ -15,6 +15,7 @@ export const emptyData: NettData = {
   debts: [],
   debtEvents: [],
   receivables: [],
+  receivableEvents: [],
   investments: [],
   commitments: [],
   reserves: [],

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.15.0';
+export const APP_VERSION = '1.16.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,20 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Base44-style loans and pots',
+    commit: 'pending',
+    summary: 'Loans and Pots now follow the simple reference flow: choose who owes whom once, then manage progress from the card and its attached ledger.',
+    changes: [
+      'Added one Add loan form with the exact I owe them and They owe me direction choices, plus title, person, currency, principal, country, net-worth and description fields.',
+      'Unified money you owe and money owed to you into one Loans card grid with edit, delete, progress and payment actions.',
+      'Loaded receivable payment history from Supabase so repayments remain visible in the correct loan ledger after refresh.',
+      'Rebuilt Pots as standalone loan ledgers with the reference Pot name, currency, loan amount, country and notes flow.',
+      'Added scoped Log payment and Add to loan dialogs to every Pot, including amount, note or purpose, date and persistent progress updates.',
+    ],
+  },
+  {
+    version: '1.15.0',
     date: RELEASE_DATE,
     title: 'A simpler Nett, built around your money',
     commit: '012bedd',

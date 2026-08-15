@@ -81,6 +81,17 @@ export interface Receivable {
   notes?: string | null;
 }
 
+export interface ReceivableEvent {
+  id: string;
+  receivable_id: string;
+  event_type: 'repayment' | 'settlement' | 'adjustment';
+  amount: number | string;
+  currency: Currency;
+  destination_account_id?: string | null;
+  occurred_at: string;
+  note?: string | null;
+}
+
 export interface Investment {
   id: string;
   workspace_id: string;
@@ -206,6 +217,7 @@ export interface NettData {
   debts: Debt[];
   debtEvents: DebtEvent[];
   receivables: Receivable[];
+  receivableEvents: ReceivableEvent[];
   investments: Investment[];
   commitments: Commitment[];
   reserves: Reserve[];
