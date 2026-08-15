@@ -602,7 +602,9 @@ html[data-theme='dark'] .context-chip-list button.selected, html[data-theme='amo
 .desktop-net-worth-primary { position:relative; z-index:1; display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px; }
 .desktop-net-worth-primary button { display:grid; place-items:center; width:30px; height:30px; padding:0; border:0; border-radius:9px; color:var(--muted); background:transparent; }
 .desktop-net-worth-primary button:hover { color:var(--ink); background:var(--surface-muted); }
-.desktop-net-worth-card > strong { position:relative; z-index:1; display:block; margin-top:18px; color:var(--ink); font-size:clamp(40px, 4vw, 58px); font-weight:750; letter-spacing:-.075em; line-height:1; }
+.desktop-net-worth-amount { position:relative; z-index:1; display:flex; align-items:baseline; gap:12px; margin-top:18px; min-width:0; }
+.desktop-net-worth-amount strong { display:block; min-width:0; color:var(--ink); font-size:clamp(40px, 4vw, 58px); font-weight:750; letter-spacing:-.075em; line-height:1; }
+.desktop-net-worth-amount span { color:var(--muted); font-size:14px; font-weight:500; }
 .desktop-net-worth-meta { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:12px; color:#489875; font-size:14px; line-height:1.45; }
 .desktop-net-worth-meta svg { flex:none; }
 .desktop-net-worth-muted { color:var(--muted); }
@@ -615,7 +617,9 @@ html[data-theme='dark'] .context-chip-list button.selected, html[data-theme='amo
 .desktop-checkin-card p, .desktop-monthly-split span, .desktop-add-row, .desktop-activity-list .activity-name { font-size:14px; line-height:1.45; }
 .desktop-summary-grid small, .desktop-currency-grid small, .desktop-upcoming-list small, .desktop-checkin-card p, .desktop-monthly-split span { color:var(--muted); }
 .desktop-currency-grid button { min-height:112px; }
-.desktop-safe-card { min-height:210px; display:flex; flex-direction:column; padding:23px; }
+.desktop-safe-card { position:relative; min-height:210px; display:flex; flex-direction:column; overflow:hidden; padding:23px; }
+.desktop-safe-card::after { content:''; position:absolute; z-index:0; top:-116px; right:-82px; width:236px; height:236px; border:1px solid rgba(201,142,220,.18); border-radius:50%; box-shadow:0 0 0 19px rgba(201,142,220,.08), 0 0 0 38px rgba(201,142,220,.05), 0 0 0 57px rgba(201,142,220,.035); pointer-events:none; }
+.desktop-safe-card > * { position:relative; z-index:1; }
 .desktop-safe-card > strong { margin-top:20px; }
 .desktop-safe-card p { margin-bottom:22px; }
 .desktop-safe-card .safe-progress { margin-top:auto; }
@@ -638,4 +642,4 @@ html[data-theme='dark'] .desktop-net-worth-meta, html[data-theme='amoled'] .desk
 html[data-theme='dark'] .desktop-net-worth-muted, html[data-theme='amoled'] .desktop-net-worth-muted { color:var(--muted); }
 html[data-theme='dark'] .whatif-card, html[data-theme='amoled'] .whatif-card { background:var(--surface); border-color:var(--line); }
 @media (max-width:1100px) and (min-width:721px) { .desktop-cockpit-grid { grid-template-columns:1fr; }.desktop-cockpit-side { grid-template-columns:repeat(2,minmax(0,1fr)); }.desktop-cockpit-side > .desktop-section-card { grid-column:1 / -1; }.desktop-cockpit-side > .desktop-checkin-card, .desktop-cockpit-side > .desktop-monthly-split { grid-column:span 1; } }
-@media (max-width:720px) { .desktop-net-worth-card { min-height:250px; padding:20px; }.desktop-net-worth-card > strong { font-size:35px; }.desktop-net-worth-meta { font-size:14px; }.desktop-net-worth-badges { padding-top:24px; }.whatif-card { padding:18px; }.whatif-card-heading h3 { font-size:21px; }.whatif-card-form { grid-template-columns:minmax(0,1fr) auto; }.whatif-card-form .primary-button { grid-column:1 / -1; width:100%; }.whatif-card.compact { margin-top:28px; } }
+@media (max-width:720px) { .desktop-net-worth-card { min-height:250px; padding:20px; }.desktop-net-worth-amount strong { font-size:35px; }.desktop-net-worth-amount span { font-size:13px; }.desktop-net-worth-meta { font-size:14px; }.desktop-net-worth-badges { padding-top:24px; }.whatif-card { padding:18px; }.whatif-card-heading h3 { font-size:21px; }.whatif-card-form { grid-template-columns:minmax(0,1fr) auto; }.whatif-card-form .primary-button { grid-column:1 / -1; width:100%; }.whatif-card.compact { margin-top:28px; } }

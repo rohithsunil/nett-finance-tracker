@@ -776,7 +776,7 @@ function MobileHomeView({ data, metrics, hidden, setHidden, staleAccounts, onQui
 function DesktopNetWorthCard({ metrics, hidden, setHidden, staleAccounts, displayCurrency }: { metrics: ReturnType<typeof calculateMetrics>; hidden: boolean; setHidden: (value: boolean) => void; staleAccounts: number; displayCurrency: string }) {
   return <section className="card desktop-net-worth-card">
     <div className="desktop-net-worth-primary"><span>Primary net worth</span><button onClick={() => setHidden(!hidden)} aria-label={hidden ? 'Show balances' : 'Hide balances'}>{hidden ? <Eye size={16} /> : <EyeOff size={16} />}</button></div>
-    <strong>{hidden ? '••••••' : formatCurrency(metrics.primaryNetWorth, displayCurrency)}</strong>
+    <div className="desktop-net-worth-amount"><strong>{hidden ? '••••••' : formatCurrency(metrics.primaryNetWorth, displayCurrency)}</strong><span>{displayCurrency}</span></div>
     <div className="desktop-net-worth-meta"><ShieldCheck size={14} /> <span>Based on your latest saved balances</span><span className="desktop-net-worth-muted">· no fake trend data</span></div>
     <div className="desktop-net-worth-badges"><span className={`status-chip ${staleAccounts ? 'warn' : 'good'}`}><span className="dot" />{staleAccounts ? `${staleAccounts} balance${staleAccounts > 1 ? 's' : ''} need updating` : 'Everything looks fresh'}</span><span className="status-chip">{staleAccounts ? 'Check-in recommended' : 'Balances recently verified'}</span></div>
   </section>;
