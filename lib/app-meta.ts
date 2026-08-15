@@ -27,7 +27,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.14.1',
     date: RELEASE_DATE,
     title: 'Pot loan actions with linked ledgers',
     commit: '1cb1c8d',
