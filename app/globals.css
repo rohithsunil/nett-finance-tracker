@@ -593,3 +593,49 @@ html[data-theme='dark'] .context-chip-list button, html[data-theme='amoled'] .co
 html[data-theme='dark'] .context-chip-list button.selected, html[data-theme='amoled'] .context-chip-list button.selected, html[data-theme='dark'] .preference-chips button.selected, html[data-theme='amoled'] .preference-chips button.selected { color:#efc4ff; background:#31243a; border-color:#594164; }
 @media (max-width:1180px) and (min-width:721px) { .context-toolbar { grid-template-columns:1fr 1fr; }.context-toolbar-title { grid-column:1 / -1; } }
 @media (max-width:720px) { .context-toolbar { display:none; }.rate-select span { display:block; }.rate-currency-buttons button { min-height:40px; }.view-preferences { padding:18px; }.preference-group { grid-template-columns:1fr; gap:10px; }.preference-chips { gap:7px; }.preference-chips button { flex:1 1 calc(50% - 7px); } }
+
+/* Nett 1.11: align the cockpit to the page rails and give its key decisions a calmer card hierarchy. */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.desktop-home-view, .desktop-cockpit-grid, .desktop-cockpit-main, .desktop-cockpit-side { width:100%; }
+.desktop-cockpit-grid { max-width:var(--content-max); }
+.desktop-net-worth-card { display:flex; min-height:278px; flex-direction:column; padding:28px; }
+.desktop-net-worth-primary { position:relative; z-index:1; display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px; }
+.desktop-net-worth-primary button { display:grid; place-items:center; width:30px; height:30px; padding:0; border:0; border-radius:9px; color:var(--muted); background:transparent; }
+.desktop-net-worth-primary button:hover { color:var(--ink); background:var(--surface-muted); }
+.desktop-net-worth-card > strong { position:relative; z-index:1; display:block; margin-top:18px; color:var(--ink); font-size:clamp(40px, 4vw, 58px); font-weight:750; letter-spacing:-.075em; line-height:1; }
+.desktop-net-worth-meta { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:12px; color:#489875; font-size:14px; line-height:1.45; }
+.desktop-net-worth-meta svg { flex:none; }
+.desktop-net-worth-muted { color:var(--muted); }
+.desktop-net-worth-badges { position:relative; z-index:1; display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; padding-top:34px; }
+.desktop-net-worth-badges .status-chip { min-height:36px; }
+.desktop-summary-grid { align-items:stretch; }
+.desktop-summary-grid button { min-height:78px; padding:14px; }
+.desktop-summary-grid b, .desktop-summary-grid small, .desktop-currency-grid button > span, .desktop-currency-grid small,
+.desktop-upcoming-list b, .desktop-upcoming-list small, .desktop-upcoming-list strong, .desktop-checkin-card b,
+.desktop-checkin-card p, .desktop-monthly-split span, .desktop-add-row, .desktop-activity-list .activity-name { font-size:14px; line-height:1.45; }
+.desktop-summary-grid small, .desktop-currency-grid small, .desktop-upcoming-list small, .desktop-checkin-card p, .desktop-monthly-split span { color:var(--muted); }
+.desktop-currency-grid button { min-height:112px; }
+.desktop-safe-card { min-height:210px; display:flex; flex-direction:column; padding:23px; }
+.desktop-safe-card > strong { margin-top:20px; }
+.desktop-safe-card p { margin-bottom:22px; }
+.desktop-safe-card .safe-progress { margin-top:auto; }
+.whatif-card { min-width:0; padding:22px; }
+.whatif-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.whatif-card-heading > div { min-width:0; }
+.whatif-card-heading h3 { margin:5px 0 0; font:500 23px/1.1 var(--serif); letter-spacing:-.045em; }
+.whatif-card-heading p { max-width:35ch; margin:7px 0 0; color:var(--muted); font-size:14px; line-height:1.45; }
+.whatif-card-form { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:8px; align-items:center; margin-top:18px; }
+.whatif-card-form input { min-width:0; }
+.whatif-card-form > span { color:var(--muted); font-size:14px; }
+.whatif-card-form .primary-button { min-width:104px; }
+.whatif-card .scenario-result { margin-top:14px; }
+.whatif-card.compact { margin-top:28px; }
+.whatif-card.compact .whatif-card-heading h3 { font-size:20px; }
+.whatif-card.compact .whatif-card-heading p { max-width:none; }
+.desktop-only-whatif { display:none; }
+html[data-theme='dark'] .desktop-net-worth-card, html[data-theme='amoled'] .desktop-net-worth-card { background:linear-gradient(145deg,#19161d,#28212e); border-color:#4a3854; }
+html[data-theme='dark'] .desktop-net-worth-meta, html[data-theme='amoled'] .desktop-net-worth-meta { color:#8bd0b2; }
+html[data-theme='dark'] .desktop-net-worth-muted, html[data-theme='amoled'] .desktop-net-worth-muted { color:var(--muted); }
+html[data-theme='dark'] .whatif-card, html[data-theme='amoled'] .whatif-card { background:var(--surface); border-color:var(--line); }
+@media (max-width:1100px) and (min-width:721px) { .desktop-cockpit-grid { grid-template-columns:1fr; }.desktop-cockpit-side { grid-template-columns:repeat(2,minmax(0,1fr)); }.desktop-cockpit-side > .desktop-section-card { grid-column:1 / -1; }.desktop-cockpit-side > .desktop-checkin-card, .desktop-cockpit-side > .desktop-monthly-split { grid-column:span 1; } }
+@media (max-width:720px) { .desktop-net-worth-card { min-height:250px; padding:20px; }.desktop-net-worth-card > strong { font-size:35px; }.desktop-net-worth-meta { font-size:14px; }.desktop-net-worth-badges { padding-top:24px; }.whatif-card { padding:18px; }.whatif-card-heading h3 { font-size:21px; }.whatif-card-form { grid-template-columns:minmax(0,1fr) auto; }.whatif-card-form .primary-button { grid-column:1 / -1; width:100%; }.whatif-card.compact { margin-top:28px; } }
