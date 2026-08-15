@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.16.0';
+export const APP_VERSION = '1.17.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,20 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'A calmer mobile cockpit',
+    commit: 'pending',
+    summary: 'The mobile dashboard now puts the decision that matters most—what is safe to spend—front and centre, with a native-feeling navigation surface and less repeated chrome.',
+    changes: [
+      'Replaced the duplicated mobile workspace, country and FX controls with one clear view selector.',
+      'Moved Safe to Spend into a dedicated, high-contrast card directly below net worth.',
+      'Added clear Add activity and Update balances actions so the mobile plus button no longer competes with the dashboard.',
+      'Added Release notes to the mobile More sheet so changelog access works on installed and browser mobile layouts.',
+      'Added safe-area spacing, larger touch targets and a Liquid Glass-inspired bottom navigation with readable dark and AMOLED states.',
+    ],
+  },
+  {
+    version: '1.16.0',
     date: RELEASE_DATE,
     title: 'Base44-style loans and pots',
     commit: 'f9f586d',
