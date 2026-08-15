@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'A calmer mobile cockpit',
-    commit: 'pending',
+    commit: 'c86db37',
     summary: 'The mobile dashboard now puts the decision that matters most—what is safe to spend—front and centre, with a native-feeling navigation surface and less repeated chrome.',
     changes: [
       'Replaced the duplicated mobile workspace, country and FX controls with one clear view selector.',
