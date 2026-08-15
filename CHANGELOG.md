@@ -1,5 +1,15 @@
 # Nett release notes
 
+## 1.11.0 - 2026-08-15 - Aligned cockpit and decision check
+
+GitHub commit: [`ac7fe06`](https://github.com/rohithsunil/nett-finance-tracker/commit/ac7fe06)
+
+- Rebuilt the desktop net-worth and Safe to Spend cards with aligned heights, clearer hierarchy, balanced spacing and dark/AMOLED support.
+- Removed the dashboard width cap that left a large unused area on the right side of wide browser windows.
+- Restored the temporary What-If decision check on desktop and mobile so a planned expense shows its safe-to-spend and net-worth impact.
+- Raised dashboard supporting copy and summary details to a readable 14px baseline while preserving display-size financial values.
+- Reflowed the cockpit at tablet widths so the main decisions stay aligned instead of becoming cramped side-by-side panels.
+
 ## 1.10.0 - 2026-08-15 - Personalized view controls
 
 GitHub commit: [`3a0466f`](https://github.com/rohithsunil/nett-finance-tracker/commit/3a0466f)

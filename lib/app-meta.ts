@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.10.0';
+export const APP_VERSION = '1.11.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Aligned cockpit and decision check',
+    commit: 'ac7fe06',
+    summary: 'The dashboard now uses the full workspace rail, calmer reference-style cards and a visible What-If check before you spend.',
+    changes: [
+      'Rebuilt the desktop net-worth and Safe to Spend cards with aligned heights, clearer hierarchy, balanced spacing and dark/AMOLED support.',
+      'Removed the dashboard width cap that left a large unused area on the right side of wide browser windows.',
+      'Restored the temporary What-If decision check on desktop and mobile so a planned expense shows its safe-to-spend and net-worth impact.',
+      'Raised dashboard supporting copy and summary details to a readable 14px baseline while preserving display-size financial values.',
+      'Reflowed the cockpit at tablet widths so the main decisions stay aligned instead of becoming cramped side-by-side panels.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
