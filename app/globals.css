@@ -831,6 +831,7 @@ html[data-theme='dark'] .whatif-card, html[data-theme='amoled'] .whatif-card { b
 .pot-ledger-actions .icon-button { width:32px; min-height:32px; padding:0; border:0; background:transparent; }
 .pot-ledger-empty { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:13px 0 2px; color:var(--muted); font-size:14px; }
 .pot-ledger-empty .view-link { display:inline-flex; align-items:center; gap:5px; padding:0; border:0; background:none; white-space:nowrap; }
+.pot-secondary-actions { margin-top:10px; }
 html[data-theme='dark'] .pot-ledger-icon.positive, html[data-theme='amoled'] .pot-ledger-icon.positive { color:#a9e6c8; background:#17372b; }
 html[data-theme='dark'] .pot-ledger-icon.negative, html[data-theme='amoled'] .pot-ledger-icon.negative { color:#f0b4cf; background:#402737; }
 @media (max-width:720px) {
