@@ -25,7 +25,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: '1.13.0',
+    version: '1.14.0',
     date: RELEASE_DATE,
     title: 'Recurring rhythm, forecast and budget control',
     commit: '7a9b467',
@@ -39,7 +39,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.13.0',
     date: RELEASE_DATE,
     title: 'Reference ledgers across the app',
     commit: '869fc4b',
