@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.13.0';
+export const APP_VERSION = '1.14.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Recurring rhythm, forecast and budget control',
+    commit: '7a9b467',
+    summary: 'Nett now connects repeating money, future decisions and monthly review into three focused planning tools that work from the same private data.',
+    changes: [
+      'Added a first-class Recurring page for salary, rent, insurance and subscriptions, with monthly income/outgoing totals and edit/delete controls.',
+      'Added a saved Forecast page with 3, 6, 12 and 24 month horizons, annual growth, recurring and one-time commitment projection, accessible trajectory values and scenario impact.',
+      'Added persisted forecast scenarios for expenses, income and new debt without altering live balances.',
+      'Added a monthly Budget page with planned lines, month navigation, planned versus actual savings, variance and actual activity linked to the existing transaction ledger.',
+      'Added Supabase migration 0004 with user-scoped RLS tables for forecast scenarios and budget lines, plus mobile planning shortcuts and responsive card layouts.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,

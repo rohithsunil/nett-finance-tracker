@@ -1,5 +1,15 @@
 # Nett release notes
 
+## 1.14.0 - 2026-08-15 - Recurring rhythm, forecast and budget control
+
+GitHub commit: [`7a9b467`](https://github.com/rohithsunil/nett-finance-tracker/commit/7a9b467)
+
+- Added a first-class Recurring page for salary, rent, insurance and subscriptions, with monthly income/outgoing totals and edit/delete controls.
+- Added a saved Forecast page with 3, 6, 12 and 24 month horizons, annual growth, recurring and one-time commitment projection, accessible trajectory values and scenario impact.
+- Added persisted forecast scenarios for expenses, income and new debt without altering live balances.
+- Added a monthly Budget page with planned lines, month navigation, planned versus actual savings, variance and actual activity linked to the existing transaction ledger.
+- Added Supabase migration 0004 with user-scoped RLS tables for forecast scenarios and budget lines, plus mobile planning shortcuts and responsive card layouts.
+
 ## 1.13.0 - 2026-08-15 - Reference ledgers across the app
 
 GitHub commit: [`869fc4b`](https://github.com/rohithsunil/nett-finance-tracker/commit/869fc4b)
