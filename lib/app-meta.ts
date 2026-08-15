@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Base44-style loans and pots',
-    commit: 'pending',
+    commit: 'f9f586d',
     summary: 'Loans and Pots now follow the simple reference flow: choose who owes whom once, then manage progress from the card and its attached ledger.',
     changes: [
       'Added one Add loan form with the exact I owe them and They owe me direction choices, plus title, person, currency, principal, country, net-worth and description fields.',
