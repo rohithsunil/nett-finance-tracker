@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.9.0';
+export const APP_VERSION = '1.9.1';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,18 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Readable desktop and mobile surfaces',
+    commit: 'b7df075',
+    summary: 'The dashboard now uses the full desktop workspace, the scrollbar fades into the chrome, and mobile controls and supporting copy are easier to read.',
+    changes: [
+      'Fixed the desktop main flex width so the dashboard no longer shrink-wraps and leave a large unused area on the right.',
+      'Replaced the default scrollbar treatment with a thin, quiet track and thumb that stays out of the way of the content.',
+      'Raised mobile interactive labels, navigation, filters, metadata and supporting text to a readable 14px minimum while preserving hierarchy for headings and financial values.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
