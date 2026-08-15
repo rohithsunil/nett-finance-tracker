@@ -643,3 +643,35 @@ html[data-theme='dark'] .desktop-net-worth-muted, html[data-theme='amoled'] .des
 html[data-theme='dark'] .whatif-card, html[data-theme='amoled'] .whatif-card { background:var(--surface); border-color:var(--line); }
 @media (max-width:1100px) and (min-width:721px) { .desktop-cockpit-grid { grid-template-columns:1fr; }.desktop-cockpit-side { grid-template-columns:repeat(2,minmax(0,1fr)); }.desktop-cockpit-side > .desktop-section-card { grid-column:1 / -1; }.desktop-cockpit-side > .desktop-checkin-card, .desktop-cockpit-side > .desktop-monthly-split { grid-column:span 1; } }
 @media (max-width:720px) { .desktop-net-worth-card { min-height:250px; padding:20px; }.desktop-net-worth-amount strong { font-size:35px; }.desktop-net-worth-amount span { font-size:13px; }.desktop-net-worth-meta { font-size:14px; }.desktop-net-worth-badges { padding-top:24px; }.whatif-card { padding:18px; }.whatif-card-heading h3 { font-size:21px; }.whatif-card-form { grid-template-columns:minmax(0,1fr) auto; }.whatif-card-form .primary-button { grid-column:1 / -1; width:100%; }.whatif-card.compact { margin-top:28px; } }
+
+/* Nett 1.12: make Pots real mini-ledgers, not just a count below a card. */
+.pot-ledger-card { min-width:0; }
+.pot-total-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-width:0; }
+.pot-total-row > span { flex:none; color:var(--muted); font-size:14px; }
+.pot-ledger-list { display:grid; gap:4px; margin-top:10px; }
+.pot-ledger-row { display:grid; grid-template-columns:30px minmax(0,1fr) auto auto; align-items:center; gap:9px; min-height:54px; padding:6px 0; border-bottom:1px solid color-mix(in srgb, var(--line) 76%, transparent); }
+.pot-ledger-row:last-child { border-bottom:0; }
+.pot-ledger-icon { display:grid; place-items:center; width:30px; height:30px; border-radius:10px; }
+.pot-ledger-icon.positive { color:#3e9976; background:#e9f8f0; }
+.pot-ledger-icon.negative { color:#a35b7b; background:#f9edf4; }
+.pot-ledger-copy { display:grid; min-width:0; gap:3px; }
+.pot-ledger-copy strong { overflow:hidden; color:var(--ink); font-size:14px; font-weight:650; text-overflow:ellipsis; white-space:nowrap; }
+.pot-ledger-copy span { overflow:hidden; color:var(--muted); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+.pot-ledger-amount { font-size:14px; font-weight:700; white-space:nowrap; }
+.pot-ledger-amount.positive { color:#32926e; }
+.pot-ledger-amount.negative { color:#9b5578; }
+.pot-ledger-actions { display:flex; gap:2px; }
+.pot-ledger-actions .icon-button { width:32px; min-height:32px; padding:0; border:0; background:transparent; }
+.pot-ledger-empty { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:13px 0 2px; color:var(--muted); font-size:14px; }
+.pot-ledger-empty .view-link { display:inline-flex; align-items:center; gap:5px; padding:0; border:0; background:none; white-space:nowrap; }
+html[data-theme='dark'] .pot-ledger-icon.positive, html[data-theme='amoled'] .pot-ledger-icon.positive { color:#a9e6c8; background:#17372b; }
+html[data-theme='dark'] .pot-ledger-icon.negative, html[data-theme='amoled'] .pot-ledger-icon.negative { color:#f0b4cf; background:#402737; }
+@media (max-width:720px) {
+  .pot-total-row { align-items:flex-start; flex-direction:column; gap:2px; }
+  .pot-total-row .reference-card-value { margin-top:0; }
+  .pot-ledger-row { grid-template-columns:30px minmax(0,1fr) auto; gap:8px; }
+  .pot-ledger-amount { grid-column:3; grid-row:1; align-self:center; }
+  .pot-ledger-actions { grid-column:2 / -1; grid-row:2; justify-content:flex-start; margin-top:-4px; }
+  .pot-ledger-copy span { font-size:14px; }
+  .pot-ledger-empty { align-items:flex-start; flex-direction:column; gap:8px; }
+}

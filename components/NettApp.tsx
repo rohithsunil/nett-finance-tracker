@@ -18,7 +18,7 @@ import NettLogo from '@/components/NettLogo';
 import type { Account, Commitment, CreditCard as CreditCardRecord, Debt, Investment, InvestmentValue, NettData, Receivable, Space, Theme, Transaction } from '@/lib/types';
 
 type Tab = 'home' | 'accounts' | 'activity' | 'pots' | 'loans' | 'holdings' | 'bills' | 'spends' | 'plan' | 'settings' | 'more';
-type Modal = 'account' | 'move-account-country' | 'delete-account' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'delete-commitment' | 'delete-debt' | 'import' | null;
+type Modal = 'account' | 'move-account-country' | 'delete-account' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'delete-commitment' | 'delete-debt' | 'delete-transaction' | 'import' | null;
 function DebtModalV3({ debts, accounts, spaces, onClose, onSave }: { debts: Debt[]; accounts: Account[]; spaces: Space[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
   return <ModalShell title="Update a debt" description="Add an arbitrary repayment or extra borrowing, then optionally place it in a Space ledger." onClose={onClose}>
     <form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}>
@@ -140,6 +140,11 @@ function IconForTransaction({ type }: { type: string }) {
   return <ArrowUpRight size={16} />;
 }
 
+function transactionBalanceDelta(transaction: Pick<Transaction, 'type' | 'amount'>) {
+  const amount = Number(transaction.amount);
+  return transaction.type === 'credit' || transaction.type === 'debt_borrowing' ? amount : -amount;
+}
+
 function MetricCard({ label, value, note, icon, accent }: { label: string; value: number; note: string; icon: React.ReactNode; accent?: string }) {
   return <div className="card stat-card">
     <div className="stat-top"><span>{label}</span><span className="stat-icon" style={accent ? { color: accent, background: `${accent}14` } : undefined}>{icon}</span></div>
@@ -207,6 +212,9 @@ export default function NettApp() {
   const [deletingCommitment, setDeletingCommitment] = useState<Commitment | null>(null);
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [deletingDebt, setDeletingDebt] = useState<Debt | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [transactionSpaceId, setTransactionSpaceId] = useState<string | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [theme, setTheme] = useState<Theme>('system');
@@ -322,6 +330,12 @@ export default function NettApp() {
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 3200); return () => window.clearTimeout(timer); }, [toast]);
 
   function notify(message: string) { setToast(message); }
+
+  function openTransactionModal(spaceId?: string | null, transaction?: Transaction | null) {
+    setEditingTransaction(transaction || null);
+    setTransactionSpaceId(spaceId || transaction?.space_id || null);
+    setModal('transaction');
+  }
 
   async function signOut() {
     const supabase = getSupabaseBrowser();
@@ -451,17 +465,51 @@ export default function NettApp() {
     const accountId = String(formData.get('account_id'));
     const account = data.accounts.find((item) => item.id === accountId);
     if (!account || !session) { notify('Add an account before saving activity.'); return; }
-    const item: Transaction = { id: crypto.randomUUID(), workspace_id: account.workspace_id, account_id: accountId, space_id: String(formData.get('space_id') || '') || null, type: String(formData.get('type')) as Transaction['type'], amount: Number(formData.get('amount')), currency: String(formData.get('currency') || account.currency), category: String(formData.get('category')), description: String(formData.get('description')), occurred_at: String(formData.get('occurred_at') || new Date().toISOString()) };
+    const item: Transaction = { id: editingTransaction?.id || crypto.randomUUID(), workspace_id: account.workspace_id, account_id: accountId, space_id: String(formData.get('space_id') || '') || null, type: String(formData.get('type')) as Transaction['type'], amount: Number(formData.get('amount')), currency: String(formData.get('currency') || account.currency), category: String(formData.get('category')), description: String(formData.get('description')), occurred_at: String(formData.get('occurred_at') || new Date().toISOString()) };
+    if (Number(item.amount) <= 0 || !item.category) { notify('Enter a positive amount and a category.'); return; }
     const supabase = getSupabaseBrowser();
+    if (supabase && editingTransaction) {
+      const previous = data.transactions.find((entry) => entry.id === editingTransaction.id);
+      if (!previous) { notify('That ledger entry is no longer available.'); return; }
+      const result = await supabase.from('transactions').update({ workspace_id: item.workspace_id, account_id: item.account_id, space_id: item.space_id, type: item.type, amount: item.amount, currency: item.currency, category: item.category, description: item.description, occurred_at: item.occurred_at }).eq('id', item.id).eq('user_id', session.userId);
+      if (result.error) { notify(`Could not update ledger entry: ${result.error.message}`); return; }
+      const previousDelta = transactionBalanceDelta(previous);
+      const nextDelta = transactionBalanceDelta(item);
+      const accountDeltas = new Map<string, number>();
+      if (previous.account_id) accountDeltas.set(previous.account_id, (accountDeltas.get(previous.account_id) || 0) - previousDelta);
+      accountDeltas.set(accountId, (accountDeltas.get(accountId) || 0) + nextDelta);
+      const updates = await Promise.all([...accountDeltas.entries()].map(([id, delta]) => { const accountState = data.accounts.find((entry) => entry.id === id); return supabase.from('accounts').update({ estimated_balance: Number(accountState?.estimated_balance ?? accountState?.verified_balance ?? 0) + delta }).eq('id', id).eq('user_id', session.userId); }));
+      const failed = updates.find((result) => result.error);
+      if (failed?.error) { notify(`Ledger entry updated, but the account balance failed: ${failed.error.message}`); return; }
+      setData((current) => ({ ...current, transactions: current.transactions.map((entry) => entry.id === item.id ? item : entry), accounts: current.accounts.map((entry) => { const delta = accountDeltas.get(entry.id); return delta ? { ...entry, estimated_balance: Number(entry.estimated_balance ?? entry.verified_balance ?? 0) + delta } : entry; }) }));
+      setModal(null); setEditingTransaction(null); setTransactionSpaceId(null); notify('Ledger entry updated.');
+      return;
+    }
     if (supabase) {
-      const delta = item.type === 'credit' ? Number(item.amount) : -Number(item.amount);
+      const delta = transactionBalanceDelta(item);
       const { data: saved, error } = await supabase.rpc('nett_post_transaction', { p_user_id: session.userId, p_transaction_id: item.id, p_workspace_id: item.workspace_id, p_account_id: item.account_id, p_space_id: item.space_id, p_type: item.type, p_amount: item.amount, p_currency: item.currency, p_category: item.category, p_description: item.description, p_occurred_at: item.occurred_at, p_balance_delta: delta });
       if (error && !isMissingFinancialMigration(error)) { notify(`Could not save activity: ${error.message}`); return; }
       if (error && isMissingFinancialMigration(error)) { const direct = await supabase.from('transactions').insert({ user_id: session.userId, ...item }); if (direct.error) { notify(`Could not save activity: ${direct.error.message}`); return; } const balanceUpdate = await supabase.from('accounts').update({ estimated_balance: Number(account.estimated_balance ?? account.verified_balance) + delta }).eq('id', account.id).eq('user_id', session.userId); if (balanceUpdate.error) { notify(`Activity saved, but balance update failed: ${balanceUpdate.error.message}`); return; } }
       if (!error && !saved) { notify('Activity was not confirmed by Supabase.'); return; }
     }
-    setData((current) => ({ ...current, transactions: [item, ...current.transactions], accounts: current.accounts.map((accountItem) => accountItem.id === accountId ? { ...accountItem, estimated_balance: Number(accountItem.estimated_balance ?? accountItem.verified_balance) + (item.type === 'credit' ? Number(item.amount) : -Number(item.amount)) } : accountItem) }));
-    setModal(null); notify('Activity saved. Your balance is now estimated until the next check-in.');
+    setData((current) => ({ ...current, transactions: [item, ...current.transactions], accounts: current.accounts.map((accountItem) => accountItem.id === accountId ? { ...accountItem, estimated_balance: Number(accountItem.estimated_balance ?? accountItem.verified_balance) + transactionBalanceDelta(item) } : accountItem) }));
+    setModal(null); setTransactionSpaceId(null); notify('Activity saved. Your balance is now estimated until the next check-in.');
+  }
+
+  async function deleteTransaction(item: Transaction) {
+    if (!session) { notify('Sign in before deleting a ledger entry.'); return; }
+    const supabase = getSupabaseBrowser();
+    if (supabase) {
+      const { error } = await supabase.from('transactions').delete().eq('id', item.id).eq('user_id', session.userId);
+      if (error) { notify(`Could not delete ledger entry: ${error.message}`); return; }
+      if (item.account_id) {
+        const account = data.accounts.find((entry) => entry.id === item.account_id);
+        const balanceUpdate = await supabase.from('accounts').update({ estimated_balance: Number(account?.estimated_balance ?? account?.verified_balance ?? 0) - transactionBalanceDelta(item) }).eq('id', item.account_id).eq('user_id', session.userId);
+        if (balanceUpdate.error) { notify(`Entry deleted, but the account balance failed: ${balanceUpdate.error.message}`); return; }
+      }
+    }
+    setData((current) => ({ ...current, transactions: current.transactions.filter((entry) => entry.id !== item.id), accounts: current.accounts.map((entry) => entry.id === item.account_id ? { ...entry, estimated_balance: Number(entry.estimated_balance ?? entry.verified_balance ?? 0) - transactionBalanceDelta(item) } : entry) }));
+    setModal(null); setDeletingTransaction(null); notify('Ledger entry deleted.');
   }
 
   async function createCommitment(form: HTMLFormElement) {
@@ -690,7 +738,7 @@ export default function NettApp() {
       {tab === 'home' && <HomeView data={scoped} metrics={metrics} hidden={hidden} setHidden={setHidden} staleAccounts={staleAccounts} onQuick={(next) => setModal(next)} onNavigate={setTab} workspace={workspace} displayCurrency={displayCurrency} comparisonCurrency={comparisonCurrency} notify={notify} whatIf={whatIf} setWhatIf={setWhatIf} whatIfResult={whatIfResult} runWhatIf={runWhatIf} />}
       {tab === 'accounts' && <AccountsViewV3 data={scoped} displayCurrency={comparisonCurrency} country={country} countryOptions={activeCountryOptions} onCountryChange={setCountry} onQuick={(next) => setModal(next)} onEdit={(account) => { setEditingAccount(account); setModal('account'); }} onMove={(account) => { setMovingAccount(account); setModal('move-account-country'); }} onDelete={(account) => { setDeletingAccount(account); setModal('delete-account'); }} />}
       {tab === 'activity' && <ActivityViewV3 data={scoped} displayCurrency={displayCurrency} country={country} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} search={search} setSearch={setSearch} spaceFilter={spaceFilter} setSpaceFilter={setSpaceFilter} onQuick={(next) => setModal(next)} />}
-      {tab === 'pots' && <PotsView data={scoped} onQuick={(next) => setModal(next)} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} />}
+      {tab === 'pots' && <PotsLedgerView data={scoped} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} onAddEntry={(space) => openTransactionModal(space.id)} onEditEntry={(transaction) => openTransactionModal(transaction.space_id, transaction)} onDeleteEntry={(transaction) => { setDeletingTransaction(transaction); setModal('delete-transaction'); }} />}
       {tab === 'loans' && <LoansView data={scoped} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} onEditDebt={(item) => { setEditingDebt(item); setModal('debt'); }} onDeleteDebt={(item) => { setDeletingDebt(item); setModal('delete-debt'); }} />}
       {tab === 'holdings' && <HoldingsView data={scoped} onQuick={(next) => setModal(next)} />}
       {tab === 'bills' && <BillsView data={scoped} onQuick={(next) => setModal(next)} onEdit={(item) => { setEditingCommitment(item); setModal('commitment'); }} onDelete={(item) => { setDeletingCommitment(item); setModal('delete-commitment'); }} />}
@@ -698,11 +746,11 @@ export default function NettApp() {
       {tab === 'plan' && <PlanViewV3 data={scoped} metrics={metrics} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} onEditCommitment={(item) => { setEditingCommitment(item); setModal('commitment'); }} onDeleteCommitment={(item) => { setDeletingCommitment(item); setModal('delete-commitment'); }} onEditDebt={(item) => { setEditingDebt(item); setModal('debt'); }} onDeleteDebt={(item) => { setDeletingDebt(item); setModal('delete-debt'); }} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} whatIf={whatIf} setWhatIf={setWhatIf} whatIfResult={whatIfResult} runWhatIf={runWhatIf} />}
       {(tab === 'settings' || tab === 'more') && <div className="settings-view"><MoreView data={data} theme={theme} setTheme={updateTheme} pushEnabled={pushEnabled} enableNotifications={enableNotifications} exportData={exportData} exportCsv={exportCsv} exportXlsx={exportXlsx} session={!!session} enabledCountries={enabledCountries} enabledCurrencies={enabledCurrencies} onToggleCountry={toggleCountry} onToggleCurrency={toggleCurrency} onResetViewOptions={resetViewOptions} onQuick={(next) => setModal(next)} onNavigate={setTab} /></div>}
     </main>
-    <button className="mobile-quick-add" aria-label="Quick add activity" onClick={() => setModal('transaction')}><Plus size={22} /></button><nav className="mobile-nav" aria-label="Mobile navigation">{mobileNavItems.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}><Icon size={17} /><span>{label}</span></button>)}</nav>
+    <button className="mobile-quick-add" aria-label="Quick add activity" onClick={() => openTransactionModal()}><Plus size={22} /></button><nav className="mobile-nav" aria-label="Mobile navigation">{mobileNavItems.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}><Icon size={17} /><span>{label}</span></button>)}</nav>
     {modal === 'account' && <AccountModal account={editingAccount} card={editingAccount ? data.creditCards.find((item) => item.account_id === editingAccount.id) || null : null} workspaces={data.workspaces} currencies={formCurrencyOptions} countries={formCountryOptions} onClose={() => { setModal(null); setEditingAccount(null); }} onSave={saveAccount} onDelete={(account) => { setEditingAccount(null); setDeletingAccount(account); setModal('delete-account'); }} />}
     {modal === 'move-account-country' && movingAccount && <MoveAccountCountryModal account={movingAccount} countries={formCountryOptions} onClose={() => { setModal(null); setMovingAccount(null); }} onSave={moveAccountCountry} />}
     {modal === 'delete-account' && deletingAccount && <DeleteAccountModal account={deletingAccount} onClose={() => { setModal(null); setDeletingAccount(null); }} onDelete={() => void deleteAccount(deletingAccount)} />}
-    {modal === 'transaction' && <TransactionModalV2 accounts={data.accounts} spaces={data.spaces} onClose={() => setModal(null)} onSave={createTransaction} />}
+    {modal === 'transaction' && <TransactionModalV3 transaction={editingTransaction} defaultSpaceId={transactionSpaceId} accounts={data.accounts} spaces={data.spaces} onClose={() => { setModal(null); setEditingTransaction(null); setTransactionSpaceId(null); }} onSave={createTransaction} />}
     {modal === 'transfer' && <TransferModal accounts={data.accounts} onClose={() => setModal(null)} onSave={createTransfer} />}
     {modal === 'checkin' && <CheckInModal accounts={data.accounts} onClose={() => setModal(null)} onSave={saveCheckin} />}
     {modal === 'whatif' && <WhatIfModal safeToSpend={metrics.safeToSpend} whatIf={whatIf} setWhatIf={setWhatIf} onClose={() => setModal(null)} onRun={() => { runWhatIf(); setModal(null); setTab('plan'); }} />}
@@ -718,6 +766,7 @@ export default function NettApp() {
     {modal === 'workspace' && <WorkspaceModal onClose={() => setModal(null)} onSave={createWorkspace} />}
     {modal === 'space' && <SpaceModal space={editingSpace} workspaces={data.workspaces} onClose={() => { setModal(null); setEditingSpace(null); }} onSave={saveSpace} />}
     {modal === 'delete-space' && deletingSpace && <DeleteSpaceModal space={deletingSpace} onClose={() => { setModal(null); setDeletingSpace(null); }} onDelete={() => void deleteSpace(deletingSpace)} />}
+    {modal === 'delete-transaction' && deletingTransaction && <DeleteTransactionModal item={deletingTransaction} onClose={() => { setModal(null); setDeletingTransaction(null); }} onDelete={() => void deleteTransaction(deletingTransaction)} />}
     {modal === 'import' && <ImportModal workspaces={data.workspaces} onClose={() => setModal(null)} onImport={importAccounts} />}
     {toast && <div className="toast"><Sparkles size={16} /> {toast}</div>}
   </div>;
@@ -831,6 +880,24 @@ function AccountsViewV3({ data, displayCurrency, country, countryOptions: visibl
 
 function PotsView({ data, onQuick, onAddSpace, onEditSpace, onDeleteSpace }: { data: NettData; onQuick: (modal: Modal) => void; onAddSpace: () => void; onEditSpace: (space: Space) => void; onDeleteSpace: (space: Space) => void }) {
   return <div className="page-panel reference-page"><div className="view-header"><div><div className="eyebrow"><Target size={13} /> Purpose-led money</div><h2>Pots</h2><p>Separate mini-ledgers for a car, business, travel, taxes or any goal.</p></div><button className="primary-button" onClick={onAddSpace}><Plus size={16} /> New pot</button></div>{data.spaces.length ? <div className="reference-card-grid">{data.spaces.map((space) => { const spent = data.transactions.filter((item) => item.space_id === space.id && item.type === 'debit').reduce((sum, item) => sum + displayAmount(Number(item.amount), item.currency, space.currency, data.fxRates), 0); const allocation = Number(space.allocation || 0); const budget = Number(space.budget || 0); const progress = budget ? Math.min(100, Math.max(0, allocation / budget * 100)) : 0; return <article className="reference-card pot-card" key={space.id} style={{ borderTopColor: space.color || '#b678c7' }}><div className="reference-card-top"><div><h3>{space.name}</h3><span className="pill">{space.currency}</span></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEditSpace(space)} aria-label={`Edit ${space.name}`}><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDeleteSpace(space)} aria-label={`Delete ${space.name}`}><Trash2 size={15} /></button></div></div><div className="reference-card-label">Allocated</div><strong className="reference-card-value">{formatCurrency(allocation, space.currency)}</strong><div className="reference-card-meta">{budget ? `of ${formatCurrency(budget, space.currency)}` : 'No target set'} · {formatCurrency(spent, space.currency, true)} spent</div>{budget > 0 && <div className="reference-progress"><span style={{ width: `${progress}%` }} /></div>}<div className="reference-card-actions-row"><button className="soft-button" onClick={() => onQuick('transaction')}><Plus size={14} /> Add entry</button><button className="soft-button" onClick={() => onEditSpace(space)}><Pencil size={14} /> Edit pot</button></div><div className="reference-divider" /><div className="reference-card-footer"><span>Ledger</span><span>{data.transactions.filter((item) => item.space_id === space.id).length} entries</span></div></article>; })}</div> : <div className="empty-state compact"><Target size={22} /><strong>No pots yet</strong><span>Create a car, business or savings pot to keep related money together.</span><button className="primary-button" onClick={onAddSpace}><Plus size={14} /> Create first pot</button></div>}</div>;
+}
+
+function PotsLedgerView({ data, onAddSpace, onEditSpace, onDeleteSpace, onAddEntry, onEditEntry, onDeleteEntry }: { data: NettData; onAddSpace: () => void; onEditSpace: (space: Space) => void; onDeleteSpace: (space: Space) => void; onAddEntry: (space: Space) => void; onEditEntry: (transaction: Transaction) => void; onDeleteEntry: (transaction: Transaction) => void }) {
+  return <div className="page-panel reference-page"><div className="view-header"><div><div className="eyebrow"><Target size={13} /> Purpose-led money</div><h2>Pots</h2><p>Separate mini-ledgers for a car, business, travel, taxes or any goal.</p></div><button className="primary-button" onClick={onAddSpace}><Plus size={16} /> New pot</button></div>{data.spaces.length ? <div className="reference-card-grid">{data.spaces.map((space) => {
+    const entries = data.transactions.filter((item) => item.space_id === space.id).sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime());
+    const allocation = Number(space.allocation || 0);
+    const budget = Number(space.budget || 0);
+    const spent = entries.filter((item) => item.type === 'debit').reduce((sum, item) => sum + displayAmount(Number(item.amount), item.currency, space.currency, data.fxRates), 0);
+    const progress = budget > 0 ? Math.min(100, Math.max(0, allocation / budget * 100)) : 0;
+    return <article className="reference-card pot-card pot-ledger-card" key={space.id} style={{ borderTopColor: space.color || '#b678c7' }}>
+      <div className="reference-card-top"><div><h3>{space.name}</h3><span className="pill">{space.currency}</span></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEditSpace(space)} aria-label={`Edit ${space.name}`}><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDeleteSpace(space)} aria-label={`Delete ${space.name}`}><Trash2 size={15} /></button></div></div>
+      <div className="reference-card-label">Allocated</div><div className="pot-total-row"><strong className="reference-card-value">{formatCurrency(allocation, space.currency)}</strong>{budget > 0 && <span>out of {formatCurrency(budget, space.currency)}</span>}</div>
+      <div className="reference-card-meta">{budget > 0 ? `${Math.round(progress)}% allocated · ` : ''}{formatCurrency(spent, space.currency, true)} spent</div>{budget > 0 && <div className="reference-progress"><span style={{ width: `${progress}%` }} /></div>}
+      <div className="reference-card-actions-row"><button className="soft-button" onClick={() => onAddEntry(space)}><Plus size={14} /> Add entry</button><button className="soft-button" onClick={() => onEditSpace(space)}><Pencil size={14} /> Edit pot</button></div>
+      <div className="reference-divider" /><div className="reference-card-footer"><span>Ledger</span><span>{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span></div>
+      {entries.length ? <div className="pot-ledger-list">{entries.map((entry) => { const positive = entry.type === 'credit' || entry.type === 'debt_borrowing'; const loanEvent = entry.type === 'debt_borrowing' || entry.type === 'debt_repayment'; return <div className="pot-ledger-row" key={entry.id}><span className={`pot-ledger-icon ${positive ? 'positive' : 'negative'}`}>{positive ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}</span><div className="pot-ledger-copy"><strong>{entry.category || entry.description || (loanEvent ? 'Loan event' : 'Ledger entry')}</strong><span>{entry.description && entry.category ? `${entry.description} · ` : ''}{formatShortDate(entry.occurred_at)} · {timeText(entry.occurred_at)}</span></div><strong className={`pot-ledger-amount ${positive ? 'positive' : 'negative'}`}>{positive ? '+' : '−'}{formatCurrency(Number(entry.amount), entry.currency, true)}</strong>{!loanEvent && <div className="pot-ledger-actions"><button className="icon-button" onClick={() => onEditEntry(entry)} aria-label={`Edit ${entry.category || 'ledger entry'}`}><Pencil size={13} /></button><button className="icon-button danger-icon" onClick={() => onDeleteEntry(entry)} aria-label={`Delete ${entry.category || 'ledger entry'}`}><Trash2 size={13} /></button></div>}</div>; })}</div> : <div className="pot-ledger-empty"><span>No entries yet.</span><button className="view-link" onClick={() => onAddEntry(space)}>Add your first entry <ArrowUpRight size={13} /></button></div>}
+    </article>;
+  })}</div> : <div className="empty-state compact"><Target size={22} /><strong>No pots yet</strong><span>Create a car, business or savings pot to keep related money together.</span><button className="primary-button" onClick={onAddSpace}><Plus size={14} /> Create first pot</button></div>}</div>;
 }
 
 function LoansView({ data, displayCurrency, onQuick, onEditDebt, onDeleteDebt }: { data: NettData; displayCurrency: string; onQuick: (modal: Modal) => void; onEditDebt: (item: Debt) => void; onDeleteDebt: (item: Debt) => void }) {
@@ -986,7 +1053,12 @@ function DeleteAccountModal({ account, onClose, onDelete }: { account: Account; 
   </ModalShell>;
 }
 
-function TransactionModalV2({ accounts, spaces, onClose, onSave }: { accounts: Account[]; spaces: Space[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title="Add activity" description="Completed spending belongs here. For future or recurring expenses, add a commitment instead." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label>Type<select name="type" defaultValue="debit"><option value="debit">Debit / expense</option><option value="credit">Credit / income</option><option value="adjustment">Balance adjustment</option></select></label><label>Amount<input required name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" /></label><label>Currency<select name="currency" defaultValue={accounts[0]?.currency || 'AED'}><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label><label>Account<select name="account_id" required defaultValue={accounts[0]?.id}>{accounts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.currency}</option>)}</select></label><label>Date<input name="occurred_at" type="datetime-local" defaultValue={new Date().toISOString().slice(0, 16)} /></label><label>Space<select name="space_id" defaultValue=""><option value="">No Space</option>{spaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="full-span">Category<input name="category" required placeholder="Groceries, salary, transport…" /></label><label className="full-span">Note (optional)<input name="description" placeholder="A little context for future you" /></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> Save activity</button></div></form></ModalShell>; }
+function TransactionModalV3({ transaction, defaultSpaceId, accounts, spaces, onClose, onSave }: { transaction: Transaction | null; defaultSpaceId: string | null; accounts: Account[]; spaces: Space[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
+  const localDate = (value?: string | null) => value ? new Date(value).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16);
+  return <ModalShell title={transaction ? 'Edit ledger entry' : 'Add ledger entry'} description={transaction ? 'Update this entry without losing its place in the selected pot.' : 'Completed spending or income belongs here. Future or recurring costs belong in Bills.'} onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label>Type<select name="type" defaultValue={transaction?.type || 'debit'}><option value="debit">Debit / expense</option><option value="credit">Credit / income</option><option value="adjustment">Balance adjustment</option></select></label><label>Amount<input required name="amount" type="number" min="0.01" step="0.01" defaultValue={transaction?.amount ?? ''} placeholder="0.00" /></label><label>Currency<select name="currency" defaultValue={transaction?.currency || accounts[0]?.currency || 'AED'}><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label><label>Account<select name="account_id" required defaultValue={transaction?.account_id || accounts[0]?.id}>{accounts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.currency}</option>)}</select></label><label>Date<input name="occurred_at" type="datetime-local" defaultValue={localDate(transaction?.occurred_at)} /></label><label>Pot<select name="space_id" defaultValue={transaction?.space_id || defaultSpaceId || ''}><option value="">No pot</option>{spaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="full-span">Category<input name="category" required defaultValue={transaction?.category || ''} placeholder="Groceries, salary, transport…" /></label><label className="full-span">Note (optional)<input name="description" defaultValue={transaction?.description || ''} placeholder="A little context for future you" /></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> {transaction ? 'Save changes' : 'Add entry'}</button></div></form></ModalShell>;
+}
+
+function TransactionModalV2({ accounts, spaces, onClose, onSave }: { accounts: Account[]; spaces: Space[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <TransactionModalV3 transaction={null} defaultSpaceId={null} accounts={accounts} spaces={spaces} onClose={onClose} onSave={onSave} />; }
 
 function TransactionModal({ accounts, onClose, onSave }: { accounts: Account[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <TransactionModalV2 accounts={accounts} spaces={[]} onClose={onClose} onSave={onSave} />; }
 
@@ -1027,6 +1099,8 @@ function WorkspaceModal({ onClose, onSave }: { onClose: () => void; onSave: (for
 function SpaceModal({ space, workspaces, onClose, onSave }: { space: Space | null; workspaces: NettData['workspaces']; onClose: () => void; onSave: (form: HTMLFormElement) => void }) { return <ModalShell title={space ? 'Edit Space' : 'Create a Space'} description="Give a goal or budget its own calm mini-ledger." onClose={onClose}><form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}><div className="form-grid"><label className="full-span">Name<input name="name" required defaultValue={space?.name || ''} placeholder="Holiday, rent, tax buffer…" /></label><label>Budget<input name="budget" type="number" min="0" step="0.01" defaultValue={space?.budget ?? ''} /></label><label>Allocated<input name="allocation" type="number" min="0" step="0.01" defaultValue={space?.allocation ?? ''} /></label><label>Currency<select name="currency" defaultValue={space?.currency || 'AED'}><option>AED</option><option>INR</option><option>USD</option></select></label><label>Colour<input name="color" type="color" defaultValue={space?.color || '#ff8dc7'} /></label><label>Workspace<select name="workspace_id" required defaultValue={space?.workspace_id || workspaces[0]?.id}>{workspaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="full-span">Notes<textarea name="notes" rows={2} defaultValue={space?.notes || ''} /></label></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Target size={15} /> {space ? 'Save changes' : 'Create Space'}</button></div></form></ModalShell>; }
 
 function DeleteSpaceModal({ space, onClose, onDelete }: { space: Space; onClose: () => void; onDelete: () => void }) { return <ModalShell title={`Delete ${space.name}?`} description="Transactions linked to this Space will stay in your activity history, but the Space itself will be removed from your plan." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>This cannot be undone from the app.</strong><span>Your account data remains private and only this Space is archived.</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep Space</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete Space</button></div></ModalShell>; }
+
+function DeleteTransactionModal({ item, onClose, onDelete }: { item: Transaction; onClose: () => void; onDelete: () => void }) { return <ModalShell title="Delete this ledger entry?" description="The entry will be removed and its linked account estimate will be restored." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>{item.category || item.description || 'Ledger entry'}</strong><span>{formatCurrency(Number(item.amount), item.currency)} · {formatShortDate(item.occurred_at)}</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep entry</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete entry</button></div></ModalShell>; }
 
 function DeleteCommitmentModal({ item, onClose, onDelete }: { item: Commitment; onClose: () => void; onDelete: () => void }) { return <ModalShell title={`Delete ${item.name}?`} description="This removes the future commitment from your plan and Safe to Spend calculations." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>Delete this commitment?</strong><span>It will be removed from your signed-in Nett account.</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep commitment</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete commitment</button></div></ModalShell>; }
 
