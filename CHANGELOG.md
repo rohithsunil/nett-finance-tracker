@@ -1,5 +1,15 @@
 # Nett release notes
 
+## 1.12.0 - 2026-08-15 - Pot ledger repair
+
+GitHub commit: [`7d89ef6`](https://github.com/rohithsunil/nett-finance-tracker/commit/7d89ef6)
+
+- Scoped Add entry to the selected pot so new expenses and income appear in the correct ledger immediately.
+- Added readable ledger rows with dates, categories, direction, amounts and compact entry actions.
+- Added edit and delete flows for ordinary ledger entries, including account estimate restoration when an entry changes or is removed.
+- Kept debt-linked ledger rows protected from accidental double-accounting; loan events remain managed from Loans.
+- Improved mobile ledger wrapping so amounts and actions remain tappable without crowding the card.
+
 ## 1.11.1 - 2026-08-15 - Reference card designs
 
 GitHub commit: [`b2b8d49`](https://github.com/rohithsunil/nett-finance-tracker/commit/b2b8d49)

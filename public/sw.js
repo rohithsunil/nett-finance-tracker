@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nett-shell-v1.11.1';
+const CACHE_NAME = 'nett-shell-v1.12.0';
 const APP_SHELL = ['/', '/login?mode=signup', '/changelog', '/manifest.webmanifest', '/icons/nett-lotus-192.png'];
 
 self.addEventListener('install', (event) => {

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.11.1';
+export const APP_VERSION = '1.12.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,6 +15,20 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Pot ledger repair',
+    commit: '7d89ef6',
+    summary: 'Pots now behave like focused mini-ledgers: entries stay with the pot you opened, and the history can be maintained without leaving the page.',
+    changes: [
+      'Scoped Add entry to the selected pot so new expenses and income appear in the correct ledger immediately.',
+      'Added readable ledger rows with dates, categories, direction, amounts and compact entry actions.',
+      'Added edit and delete flows for ordinary ledger entries, including account estimate restoration when an entry changes or is removed.',
+      'Kept debt-linked ledger rows protected from accidental double-accounting; loan events remain managed from Loans.',
+      'Improved mobile ledger wrapping so amounts and actions remain tappable without crowding the card.',
+    ],
+  },
+  {
+    version: '1.11.1',
+    date: RELEASE_DATE,
     title: 'Reference card designs',
     commit: 'b2b8d49',
     summary: 'The dashboard cards now visibly match Nett’s reference treatment, including the pink net-worth glow and the dark Safe to Spend rings.',
@@ -25,7 +39,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.11.0',
     date: RELEASE_DATE,
     title: 'Aligned cockpit and decision check',
     commit: 'ac7fe06',
@@ -39,7 +53,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.10.0',
     date: RELEASE_DATE,
     title: 'Personalized view controls',
     commit: '3a0466f',
