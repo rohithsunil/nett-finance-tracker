@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Mobile dashboard visibility and compact accounts',
-    commit: 'pending',
+    commit: 'dd7f8dc',
     summary: 'Safe to Spend now renders reliably on mobile, while Accounts uses a more compact rectangular card density that keeps the full edit surface in view.',
     changes: [
       'Fixed the mobile Safe to Spend card visibility rule so it appears directly below net worth on the Dashboard.',
