@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'Reference ledgers across the app',
-    commit: 'pending',
+    commit: '869fc4b',
     summary: 'Loans, Spends and Bills now use the same calm, card-first workflow with clear actions, progress and history on desktop and mobile.',
     changes: [
       'Rebuilt Loans as a two-column card grid with repayment progress, outstanding balance, due date, scoped Log payment and Add to loan actions.',

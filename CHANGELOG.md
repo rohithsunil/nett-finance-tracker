@@ -2,7 +2,7 @@
 
 ## 1.13.0 - 2026-08-15 - Reference ledgers across the app
 
-GitHub commit: `pending`
+GitHub commit: [`869fc4b`](https://github.com/rohithsunil/nett-finance-tracker/commit/869fc4b)
 
 - Rebuilt Loans as a two-column card grid with repayment progress, outstanding balance, due date, scoped Log payment and Add to loan actions.
 - Added a real loan ledger with persistent borrowing and repayment events, edit/delete controls, full-history expansion and account balance reconciliation.
