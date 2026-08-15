@@ -27,7 +27,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.12.0',
     date: RELEASE_DATE,
     title: 'Pot ledger repair',
     commit: '7d89ef6',
