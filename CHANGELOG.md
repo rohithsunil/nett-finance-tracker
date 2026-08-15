@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.14.1 - 2026-08-15 - Pot loan actions with linked ledgers
+
+GitHub commit: [`1cb1c8d`](https://github.com/rohithsunil/nett-finance-tracker/commit/1cb1c8d)
+
+- Added Log payment and Add to loan actions to every Pot card.
+- Preselected the originating Pot in the debt-event form so the new loan event is added to the correct ledger.
+- Kept Add entry and Edit pot available as secondary actions, with loan actions disabled until a loan exists.
+
 ## 1.14.0 - 2026-08-15 - Recurring rhythm, forecast and budget control
 
 GitHub commit: [`7a9b467`](https://github.com/rohithsunil/nett-finance-tracker/commit/7a9b467)

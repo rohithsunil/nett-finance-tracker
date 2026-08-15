@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.14.0';
+export const APP_VERSION = '1.14.1';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Pot loan actions with linked ledgers',
+    commit: '1cb1c8d',
+    summary: 'Pot cards now make loan repayments and additional borrowing easy to record without losing the focused Space ledger context.',
+    changes: [
+      'Added Log payment and Add to loan actions to every Pot card.',
+      'Preselected the originating Pot in the debt-event form so the new loan event is added to the correct ledger.',
+      'Kept Add entry and Edit pot available as secondary actions, with loan actions disabled until a loan exists.',
+    ],
+  },
+  {
+    version: '1.13.0',
     date: RELEASE_DATE,
     title: 'Recurring rhythm, forecast and budget control',
     commit: '7a9b467',
