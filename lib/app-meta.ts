@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.17.0';
+export const APP_VERSION = '1.17.1';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Mobile dashboard visibility and compact accounts',
+    commit: 'pending',
+    summary: 'Safe to Spend now renders reliably on mobile, while Accounts uses a more compact rectangular card density that keeps the full edit surface in view.',
+    changes: [
+      'Fixed the mobile Safe to Spend card visibility rule so it appears directly below net worth on the Dashboard.',
+      'Reduced Accounts card padding, radius, logo size and typography for a cleaner rectangular mobile layout.',
+      'Kept account actions and status controls touch-friendly while reducing unnecessary vertical scrolling.',
+    ],
+  },
+  {
+    version: '1.17.0',
     date: RELEASE_DATE,
     title: 'A calmer mobile cockpit',
     commit: 'c86db37',

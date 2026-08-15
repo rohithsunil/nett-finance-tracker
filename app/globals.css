@@ -909,7 +909,7 @@ html[data-theme='dark'] .pot-ledger-icon.negative, html[data-theme='amoled'] .po
   .mobile-card-label button { width:42px; height:42px; min-height:42px; }
   .mobile-total-card strong { display:block; margin-top:25px; font-size:clamp(36px,10vw,48px); letter-spacing:-.075em; line-height:.98; }
   .mobile-total-meta { margin-top:18px; font-size:14px; }
-  .mobile-safe-card { position:relative; min-height:184px; flex-direction:column; overflow:hidden; margin-top:16px; padding:23px 22px; border:1px solid #342d38; border-radius:28px; color:#fff; background:linear-gradient(145deg,#17151a,#26202b); box-shadow:0 15px 34px rgba(25,20,30,.16); }
+  .mobile-safe-card { position:relative; display:flex; min-height:184px; flex-direction:column; overflow:hidden; margin-top:16px; padding:23px 22px; border:1px solid #342d38; border-radius:28px; color:#fff; background:linear-gradient(145deg,#17151a,#26202b); box-shadow:0 15px 34px rgba(25,20,30,.16); }
   .mobile-safe-card::after { content:''; position:absolute; top:-116px; right:-70px; width:230px; height:230px; border:1px solid rgba(235,153,228,.2); border-radius:50%; box-shadow:0 0 0 18px rgba(236,151,225,.08),0 0 0 37px rgba(236,151,225,.05); pointer-events:none; }
   .mobile-safe-card > * { position:relative; z-index:1; }
   .mobile-safe-card-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -964,6 +964,23 @@ html[data-theme='dark'] .pot-ledger-icon.negative, html[data-theme='amoled'] .po
   html[data-theme='dark'] .mobile-nav button.active, html[data-theme='amoled'] .mobile-nav button.active { color:#17151a; background:#f4eefa; }
   html[data-theme='amoled'] .mobile-nav { background:rgba(18,18,20,.82); border-color:#3b3540; }
   html[data-theme='dark'] .mobile-safe-card, html[data-theme='amoled'] .mobile-safe-card { background:linear-gradient(145deg,#151318,#251e2a); }
+  .accounts-board { padding:14px; }
+  .accounts-board-note { padding:0 1px 13px; }
+  .accounts-board-note strong { font-size:14px; }
+  .accounts-board-note span:not(.status-chip) { font-size:13px; line-height:1.35; }
+  .account-detail-grid { gap:10px; padding-top:13px; }
+  .account-detail-card { padding:14px; border-radius:16px; box-shadow:0 7px 18px rgba(42,32,52,.045); }
+  .account-detail-card .account-logo { width:36px !important; height:36px !important; }
+  .account-detail-top { gap:7px; }
+  .account-detail-name { margin-top:12px; font-size:16px; line-height:1.2; }
+  .account-detail-card .table-muted { font-size:13px; line-height:1.35; }
+  .account-detail-card .account-meta-line { margin-top:11px; }
+  .account-balance-row { margin-top:14px; }
+  .account-detail-balance { font-size:28px; }
+  .account-converted-balance { font-size:13px; }
+  .account-detail-actions { gap:7px; margin-top:14px; padding-top:11px; }
+  .account-detail-actions .pill { min-height:34px; padding:0 9px; font-size:13px; }
+  .account-detail-actions .edit-account-button { min-height:42px; padding:0 10px; font-size:13px; }
 }
 
 @media (max-width:380px) {
