@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.14.1';
+export const APP_VERSION = '1.15.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'A simpler Nett, built around your money',
+    commit: 'pending',
+    summary: 'Nett now follows the reference app’s calmer flow: one bento dashboard, a persistent desktop menu, a focused mobile navigation and less chrome around every task.',
+    changes: [
+      'Simplified desktop navigation to Dashboard, Accounts, Pots, Loans, Holdings, Bills, Spends, Recurring, Forecast, Budget and Settings.',
+      'Reworked mobile navigation to Dashboard, Accounts, Pots, Loans and More, with the remaining tools grouped into a native-feeling bottom sheet.',
+      'Moved workspace, country and totals controls into the Dashboard so secondary pages stay focused on their actual job.',
+      'Removed repeated FX/context bars from Accounts and planning pages while keeping the existing country-aware data filtering intact.',
+      'Replaced the old first-run entry with a four-step onboarding introduction, followed by Nett’s real private profile and first-account setup.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,

@@ -8,6 +8,13 @@ import NettLogo from '@/components/NettLogo';
 
 type Props = { email: string; initialName: string; initialCurrency: string; initialWorkspaceId: string | null };
 
+const introSlides = [
+  { eyebrow: 'Welcome', title: 'Your entire financial life, in one calm place.', copy: 'Accounts, savings, loans, investments and bills — brought together without making money feel like work.' },
+  { eyebrow: 'One view', title: 'See everything at a glance.', copy: 'A living net-worth dashboard across all your accounts and holdings, in the currency you choose.' },
+  { eyebrow: 'Save with intention', title: 'Grow your pots, one goal at a time.', copy: 'Keep a car, business, travel or emergency goal separate, so every amount has a job.' },
+  { eyebrow: 'Private by design', title: 'Your numbers stay yours.', copy: 'Your accounts, pots and loans are isolated to your account and protected by row-level security.' },
+];
+
 export default function OnboardingFlow({ email, initialName, initialCurrency, initialWorkspaceId }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
@@ -15,6 +22,8 @@ export default function OnboardingFlow({ email, initialName, initialCurrency, in
   const [accountName, setAccountName] = useState('');
   const [accountType, setAccountType] = useState('current');
   const [balance, setBalance] = useState('');
+  const [introStep, setIntroStep] = useState(0);
+  const [setup, setSetup] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,15 +64,22 @@ export default function OnboardingFlow({ email, initialName, initialCurrency, in
     router.refresh();
   }
 
+  function startSetup() { setError(''); setSetup(true); }
+
   async function skip() { await complete(); }
 
   return <main className="onboarding-shell">
     <div className="onboarding-glow glow-one" /><div className="onboarding-glow glow-two" />
     <section className="onboarding-card">
-      <div className="onboarding-top"><NettLogo priority /><div className="step-count">{step} of 2</div></div>
-      <div className="onboarding-progress"><span style={{ width: `${step * 50}%` }} /></div>
-      <div className="eyebrow"><Sparkles size={14} /> A softer start with money</div>
-      {step === 1 ? <>
+      <div className="onboarding-top"><NettLogo priority /><div className="step-count">{setup ? `${step} of 2` : `${introStep + 1} of 4`}</div></div>
+      <div className="onboarding-progress"><span style={{ width: `${setup ? step * 50 : (introStep + 1) * 25}%` }} /></div>
+      {!setup ? <>
+        <div className="eyebrow"><Sparkles size={14} /> {introSlides[introStep].eyebrow}</div>
+        <div className="onboarding-slide"><h1>{introSlides[introStep].title}</h1><p className="auth-copy">{introSlides[introStep].copy}</p></div>
+        <div className="onboarding-actions"><button type="button" className="onboarding-back" disabled={introStep === 0} onClick={() => setIntroStep((current) => Math.max(0, current - 1))}>Back</button>{introStep === introSlides.length - 1 ? <button type="button" className="primary-button" onClick={startSetup}>Get started <ChevronRight size={16} /></button> : <button type="button" className="primary-button" onClick={() => setIntroStep((current) => Math.min(introSlides.length - 1, current + 1))}>Continue <ChevronRight size={16} /></button>}</div>
+        <button type="button" className="onboarding-skip" onClick={startSetup}>Skip intro</button>
+      </> : step === 1 ? <>
+        <div className="eyebrow"><Sparkles size={14} /> Make Nett yours</div>
         <h1>Let’s make Nett yours.</h1>
         <p className="auth-copy">A few details create a useful starting point. You can change everything later.</p>
         <form className="onboarding-form" onSubmit={(event) => { event.preventDefault(); setError(''); setStep(2); }}>
