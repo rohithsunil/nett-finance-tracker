@@ -22,6 +22,8 @@ export const emptyData: NettData = {
   creditCards: [],
   spaces: [],
   investmentValues: [],
+  forecastScenarios: [],
+  budgetLines: [],
   fxRates: {
     AED_USD: 0.2723,
     USD_AED: 3.6725,

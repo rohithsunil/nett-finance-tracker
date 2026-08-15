@@ -170,6 +170,31 @@ export interface Transaction {
   occurred_at: string;
 }
 
+export interface ForecastScenario {
+  id: string;
+  workspace_id: string;
+  name: string;
+  kind: 'expense' | 'income' | 'debt';
+  amount: number | string;
+  currency: Currency;
+  month_offset: number;
+  country_code?: CountryCode | null;
+  notes?: string | null;
+}
+
+export interface BudgetLine {
+  id: string;
+  workspace_id: string;
+  month: string;
+  name: string;
+  kind: 'income' | 'expense';
+  category?: string | null;
+  amount: number | string;
+  currency: Currency;
+  country_code?: CountryCode | null;
+  notes?: string | null;
+}
+
 export interface FxRates {
   [key: string]: number;
 }
@@ -188,6 +213,8 @@ export interface NettData {
   creditCards: CreditCard[];
   spaces: Space[];
   investmentValues: InvestmentValue[];
+  forecastScenarios: ForecastScenario[];
+  budgetLines: BudgetLine[];
   fxRates: FxRates;
   fxRateSource?: string;
   fxRatesUpdatedAt?: string | null;
