@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.9.1';
+export const APP_VERSION = '1.10.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -15,6 +15,20 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Personalized view controls',
+    commit: '3a0466f',
+    summary: 'Nett now keeps the sidebar focused and puts country, workspace and totals choices where you are using them, with readable type and consistent flag icons across every surface.',
+    changes: [
+      'Moved workspace, country and totals-currency controls out of the desktop sidebar into page-level controls; Accounts keeps its focused country filter.',
+      'Added Settings controls to show or hide countries and currencies per user, with UAE, India, AED and INR enabled by default and browser-local fallback support.',
+      'Replaced emoji country markers with reusable inline SVG flags and replaced the currency comparison dropdown with accessible button chips.',
+      'Raised supporting desktop text and touch-target labels to a 14px minimum while preserving hierarchy for display headings and financial values.',
+      'Added Supabase migration 0003 so country and currency visibility choices persist across devices.',
+    ],
+  },
+  {
+    version: '1.9.1',
+    date: RELEASE_DATE,
     title: 'Readable desktop and mobile surfaces',
     commit: 'b7df075',
     summary: 'The dashboard now uses the full desktop workspace, the scrollbar fades into the chrome, and mobile controls and supporting copy are easier to read.',
@@ -25,7 +39,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.9.1',
     date: RELEASE_DATE,
     title: 'Native-feeling responsive shell',
     commit: 'c9e07be',
@@ -39,7 +53,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: '1.9.1',
     date: RELEASE_DATE,
     title: 'Debit-card account surfaces',
     commit: '83885e4',

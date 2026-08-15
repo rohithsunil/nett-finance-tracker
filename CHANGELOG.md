@@ -1,5 +1,15 @@
 # Nett release notes
 
+## 1.10.0 - 2026-08-15 - Personalized view controls
+
+GitHub commit: [`3a0466f`](https://github.com/rohithsunil/nett-finance-tracker/commit/3a0466f)
+
+- Moved workspace, country and totals-currency controls out of the desktop sidebar into page-level controls.
+- Added per-user Settings controls to show or hide countries and currencies, with UAE, India, AED and INR enabled by default.
+- Replaced emoji country markers with consistent inline SVG flags and replaced the currency comparison dropdown with button chips.
+- Raised supporting desktop text and touch-target labels to a 14px minimum while preserving hierarchy for headings and financial values.
+- Added Supabase migration 0003 so country and currency visibility choices persist across devices.
+
 ## 1.6.0 - 2026-08-14 - Focused finance workspace
 
 GitHub commit: [`fc46578`](https://github.com/rohithsunil/nett-finance-tracker/commit/fc46578)
