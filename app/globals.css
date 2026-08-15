@@ -222,6 +222,62 @@ html[data-theme='dark'] .plan-summary-card, html[data-theme='amoled'] .plan-summ
   .settings-view .view-header h2::after { font-size:30px; }
 }
 
+/* Nett 1.13: consistent card ledgers across Loans, Spends and Bills. */
+.loans-reference-page .reference-card,
+.spends-reference-page .reference-card,
+.bills-reference-page .reference-card { border-top:1px solid var(--line); }
+.loan-value-row, .spend-value-row { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+.loan-value-row > span, .spend-value-row > span { flex:none; color:var(--muted); font-size:14px; line-height:1.45; text-align:right; }
+.loan-ledger-heading, .spend-ledger-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--ink); font-size:14px; }
+.loan-ledger-heading > span:last-child, .spend-ledger-heading > span:last-child { color:var(--muted); font-size:13px; }
+.loan-ledger-list, .spend-ledger-list { display:grid; gap:2px; margin-top:9px; }
+.loan-ledger-row { display:grid; grid-template-columns:30px minmax(0,1fr) auto auto; align-items:center; gap:9px; min-height:48px; padding:5px 0; border-bottom:1px solid color-mix(in srgb, var(--line) 76%, transparent); }
+.loan-ledger-row:last-child, .spend-ledger-row:last-child { border-bottom:0; }
+.loan-ledger-icon, .spend-ledger-arrow { display:grid; place-items:center; width:28px; height:28px; border-radius:9px; }
+.loan-ledger-icon.borrowing { color:#7a57d1; background:#f0eaff; }
+.loan-ledger-icon.repayment, .spend-ledger-arrow { color:#2d9c74; background:#e8f8f0; }
+.loan-ledger-copy, .spend-ledger-row > div { display:grid; min-width:0; gap:2px; }
+.loan-ledger-copy strong, .spend-ledger-row strong { overflow:hidden; color:var(--ink); font-size:14px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.loan-ledger-copy span, .spend-ledger-row > div span { color:var(--muted); font-size:13px; }
+.loan-ledger-positive { color:#8059d6; font-size:14px; white-space:nowrap; }
+.loan-ledger-negative { color:#159f72; font-size:14px; white-space:nowrap; }
+.loan-ledger-actions { display:flex; gap:2px; }
+.loan-ledger-actions .icon-button { width:32px; min-height:32px; padding:0; border:0; background:transparent; }
+.loan-ledger-empty, .spend-ledger-empty { padding:12px 0 2px; color:var(--muted); font-size:14px; }
+.loan-ledger-more, .spend-ledger-more { margin-top:8px; padding:0; border:0; background:transparent; font-size:14px; }
+.bill-card-title { display:flex; align-items:center; gap:12px; min-width:0; }
+.bill-card-title > div { min-width:0; }
+.bill-card-title h3 { margin-bottom:8px; }
+.bill-check { flex:none; width:34px; height:34px; border:1px solid var(--line); border-radius:50%; background:var(--surface-muted); }
+.bill-card-due { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:24px; }
+.bill-card-due > span { color:var(--muted); font-size:14px; }
+.bill-card-due strong { font:500 28px/1.1 var(--serif); letter-spacing:-.04em; }
+.bill-card.overdue { border-color:#efb2b8; }
+.danger-text { color:#c45562 !important; }
+.bill-card-note { margin:12px 0 0; color:var(--muted); font-size:14px; line-height:1.45; }
+.spend-breakdown { display:flex; gap:2px; height:8px; margin-top:17px; overflow:hidden; border-radius:99px; background:var(--surface-muted); }
+.spend-breakdown span { min-width:4px; height:100%; background:#7a45ed; }
+.spend-breakdown span:nth-child(2) { background:#cf45df; }
+.spend-breakdown span:nth-child(3) { background:#17aa80; }
+.spend-breakdown span:nth-child(4) { background:#f2a20b; }
+.spend-breakdown-legend { display:flex; flex-wrap:wrap; gap:8px 12px; margin-top:10px; color:var(--muted); font-size:13px; }
+.spend-breakdown-legend span { display:inline-flex; align-items:center; gap:5px; }
+.spend-dot { width:8px; height:8px; border-radius:50%; background:#7a45ed; }
+.spend-dot.dot-1 { background:#cf45df; }.spend-dot.dot-2 { background:#17aa80; }.spend-dot.dot-3 { background:#f2a20b; }
+html[data-theme='dark'] .loan-ledger-icon.borrowing, html[data-theme='amoled'] .loan-ledger-icon.borrowing { color:#d0b8ff; background:#30264b; }
+html[data-theme='dark'] .loan-ledger-icon.repayment, html[data-theme='amoled'] .loan-ledger-icon.repayment, html[data-theme='dark'] .spend-ledger-arrow, html[data-theme='amoled'] .spend-ledger-arrow { color:#a6e4c9; background:#17372b; }
+html[data-theme='dark'] .bill-card.overdue, html[data-theme='amoled'] .bill-card.overdue { border-color:#75404a; }
+@media (max-width:720px) {
+  .loan-value-row, .spend-value-row { align-items:flex-start; flex-direction:column; gap:4px; }
+  .loan-value-row > span, .spend-value-row > span { text-align:left; }
+  .loan-ledger-row { grid-template-columns:30px minmax(0,1fr) auto; gap:8px; }
+  .loan-ledger-actions { grid-column:2 / -1; justify-content:flex-start; margin-top:-2px; }
+  .loan-ledger-row > strong { grid-column:3; grid-row:1; }
+  .bill-card-due { margin-top:20px; }
+  .bill-card-due strong { font-size:25px; }
+  .reference-card-actions-row .soft-button { font-size:14px; }
+}
+
 /* Reference-style desktop information architecture and first-class finance pages. */
 @media (min-width:721px) {
   .desktop-sidebar { padding-top:32px; }
@@ -239,6 +295,9 @@ html[data-theme='dark'] .country-filter, html[data-theme='amoled'] .country-filt
 @media (max-width:720px) {
   .country-filter { display:grid; gap:9px; margin:-2px 0 14px; padding:11px; }.country-filter > div { justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px; scrollbar-width:none; }.country-filter > div::-webkit-scrollbar { display:none; }.country-filter button { flex:none; min-height:35px; padding:0 10px; }.reference-page .view-header h2 { font-size:30px; }.reference-card-grid { grid-template-columns:1fr; gap:12px; }.reference-card { padding:19px; border-radius:18px; }.reference-card-top h3 { font-size:21px; }.reference-card-value { font-size:29px; }.reference-card-actions-row { gap:8px; }.reference-card-actions-row .soft-button { min-height:44px; padding:0 8px; font-size:10px; }.reference-subsection-heading { align-items:flex-start; flex-direction:column; }.reference-subsection-heading .soft-button { width:100%; }.reference-bill { align-items:flex-start; flex-wrap:wrap; gap:10px; padding:16px; }.bill-copy { min-width:calc(100% - 50px); }.bill-amount { margin-left:50px; font-size:22px; }.reference-bill .reference-card-actions { margin-left:auto; }.reference-bill .reference-card-actions .icon-button { width:32px; }.reference-page .view-header > .primary-button { width:100%; }
 }
+
+/* Keep the new ledger pages neutral after the shared reference card accent rules. */
+.loans-reference-page .reference-card, .spends-reference-page .reference-card, .bills-reference-page .reference-card { border-top:1px solid var(--line); }
 
 /* Nett focused information architecture: simple mobile home, spacious desktop surfaces. */
 .mobile-home-view { display:none; }

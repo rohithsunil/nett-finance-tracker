@@ -13,6 +13,7 @@ export const emptyData: NettData = {
   workspaces: [],
   accounts: [],
   debts: [],
+  debtEvents: [],
   receivables: [],
   investments: [],
   commitments: [],

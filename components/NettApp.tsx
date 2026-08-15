@@ -15,12 +15,13 @@ import { calculateMetrics, debtProgress, displayAmount, formatCurrency, formatSh
 import { emptyData } from '@/lib/empty-data';
 import { APP_VERSION } from '@/lib/app-meta';
 import NettLogo from '@/components/NettLogo';
-import type { Account, Commitment, CreditCard as CreditCardRecord, Debt, Investment, InvestmentValue, NettData, Receivable, Space, Theme, Transaction } from '@/lib/types';
+import type { Account, Commitment, CreditCard as CreditCardRecord, Debt, DebtEvent, Investment, InvestmentValue, NettData, Receivable, Space, Theme, Transaction } from '@/lib/types';
 
 type Tab = 'home' | 'accounts' | 'activity' | 'pots' | 'loans' | 'holdings' | 'bills' | 'spends' | 'plan' | 'settings' | 'more';
-type Modal = 'account' | 'move-account-country' | 'delete-account' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'delete-commitment' | 'delete-debt' | 'delete-transaction' | 'import' | null;
-function DebtModalV3({ debts, accounts, spaces, onClose, onSave }: { debts: Debt[]; accounts: Account[]; spaces: Space[]; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
-  return <ModalShell title="Update a debt" description="Add an arbitrary repayment or extra borrowing, then optionally place it in a Space ledger." onClose={onClose}>
+type Modal = 'account' | 'move-account-country' | 'delete-account' | 'transaction' | 'transfer' | 'checkin' | 'whatif' | 'commitment' | 'debt' | 'debt-event' | 'delete-debt-event' | 'receivable' | 'receivable-event' | 'investment' | 'reserve' | 'workspace' | 'space' | 'delete-space' | 'delete-commitment' | 'delete-debt' | 'delete-transaction' | 'import' | null;
+function DebtModalV3({ debts, accounts, spaces, event = null, defaultDebtId = null, defaultEventType = 'repayment', onClose, onSave }: { debts: Debt[]; accounts: Account[]; spaces: Space[]; event?: DebtEvent | null; defaultDebtId?: string | null; defaultEventType?: 'borrowing' | 'repayment'; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
+  const selectedDebtId = event?.debt_id || defaultDebtId || debts[0]?.id;
+  return <ModalShell title={event ? 'Edit debt entry' : defaultEventType === 'borrowing' ? 'Add to loan' : 'Log payment'} description={event ? 'Correct the amount, date or note without losing the loan history.' : 'Record a partial repayment or add borrowing when the balance grows.'} onClose={onClose}>
     <form onSubmit={(event) => { event.preventDefault(); onSave(event.currentTarget); }}>
       <div className="form-grid">
         <label className="full-span">Debt<select name="debt_id" required defaultValue={debts[0]?.id}>{debts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.currency} · {formatCurrency(Number(item.outstanding), item.currency)}</option>)}</select></label>
@@ -32,6 +33,27 @@ function DebtModalV3({ debts, accounts, spaces, onClose, onSave }: { debts: Debt
       </div>
       <div className="form-message"><CircleDollarSign size={15} /> Linking this to Car or Business records the borrowing or repayment in that Space without double-counting your cash.</div>
       <div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> Save debt event</button></div>
+    </form>
+  </ModalShell>;
+}
+
+function DebtEventModalV4({ debts, accounts, spaces, event, defaultDebtId, defaultEventType, onClose, onSave }: { debts: Debt[]; accounts: Account[]; spaces: Space[]; event: DebtEvent | null; defaultDebtId: string | null; defaultEventType: 'borrowing' | 'repayment'; onClose: () => void; onSave: (form: HTMLFormElement) => void }) {
+  const selectedDebtId = event?.debt_id || defaultDebtId || debts[0]?.id;
+  const dateValue = event?.occurred_at ? event.occurred_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
+  return <ModalShell title={event ? 'Edit debt entry' : defaultEventType === 'borrowing' ? 'Add to loan' : 'Log payment'} description={event ? 'Correct the amount, date or note without losing the loan history.' : 'Record a partial repayment or add borrowing when the balance changes.'} onClose={onClose}>
+    <form onSubmit={(submitEvent) => { submitEvent.preventDefault(); onSave(submitEvent.currentTarget); }}>
+      <div className="form-grid">
+        <label className="full-span">Loan<select name="debt_id" required defaultValue={selectedDebtId}>{debts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.currency} · {formatCurrency(Number(item.outstanding), item.currency)}</option>)}</select></label>
+        {event && <input type="hidden" name="event_id" value={event.id} />}
+        <label>Entry type<select name="event_type" defaultValue={event?.event_type === 'borrowing' ? 'borrowing' : defaultEventType}><option value="repayment">Repayment</option><option value="borrowing">Additional borrowing</option></select></label>
+        <label>Amount<input name="amount" required type="number" min="0.01" step="0.01" defaultValue={event?.amount ?? ''} placeholder="0.00" /></label>
+        <label>Account<select name="source_account_id" defaultValue={event?.source_account_id || ''}><option value="">Do not link an account</option>{accounts.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.currency}</option>)}</select></label>
+        <label>Date<input name="occurred_at" type="date" defaultValue={dateValue} /></label>
+        {!event && <label>Space ledger<select name="space_id" defaultValue=""><option value="">Do not link a Space</option>{spaces.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+        <label className="full-span">Note<input name="note" defaultValue={event?.note || ''} placeholder="Dad loan for car, extra repair funding…" /></label>
+      </div>
+      {!event && <div className="form-message"><CircleDollarSign size={15} /> Link an account when Nett should update its estimated balance. Link a Space only when this event belongs in a focused ledger.</div>}
+      <div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Cancel</button><button className="primary-button"><Check size={15} /> {event ? 'Save changes' : defaultEventType === 'borrowing' ? 'Add to loan' : 'Log payment'}</button></div>
     </form>
   </ModalShell>;
 }
@@ -145,6 +167,15 @@ function transactionBalanceDelta(transaction: Pick<Transaction, 'type' | 'amount
   return transaction.type === 'credit' || transaction.type === 'debt_borrowing' ? amount : -amount;
 }
 
+function debtEventBalanceDelta(event: Pick<DebtEvent, 'event_type' | 'amount'>) {
+  const amount = Number(event.amount);
+  return event.event_type === 'borrowing' ? amount : -amount;
+}
+
+function debtOutstandingFromEvents(debt: Debt, events: DebtEvent[]) {
+  return Math.max(0, Number(debt.original_principal) + events.filter((event) => event.event_type === 'borrowing' || event.event_type === 'repayment').reduce((sum, event) => sum + debtEventBalanceDelta(event), 0));
+}
+
 function MetricCard({ label, value, note, icon, accent }: { label: string; value: number; note: string; icon: React.ReactNode; accent?: string }) {
   return <div className="card stat-card">
     <div className="stat-top"><span>{label}</span><span className="stat-icon" style={accent ? { color: accent, background: `${accent}14` } : undefined}>{icon}</span></div>
@@ -212,6 +243,10 @@ export default function NettApp() {
   const [deletingCommitment, setDeletingCommitment] = useState<Commitment | null>(null);
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [deletingDebt, setDeletingDebt] = useState<Debt | null>(null);
+  const [editingDebtEvent, setEditingDebtEvent] = useState<DebtEvent | null>(null);
+  const [deletingDebtEvent, setDeletingDebtEvent] = useState<DebtEvent | null>(null);
+  const [debtEventDebtId, setDebtEventDebtId] = useState<string | null>(null);
+  const [debtEventType, setDebtEventType] = useState<'borrowing' | 'repayment'>('repayment');
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionSpaceId, setTransactionSpaceId] = useState<string | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
@@ -235,6 +270,7 @@ export default function NettApp() {
     ...data,
     accounts: data.accounts.filter((item) => item.workspace_id === workspace),
     debts: data.debts.filter((item) => item.workspace_id === workspace),
+    debtEvents: data.debtEvents.filter((event) => data.debts.some((debt) => debt.id === event.debt_id && debt.workspace_id === workspace)),
     receivables: data.receivables.filter((item) => item.workspace_id === workspace),
     investments: data.investments.filter((item) => item.workspace_id === workspace),
     commitments: data.commitments.filter((item) => item.workspace_id === workspace),
@@ -246,6 +282,7 @@ export default function NettApp() {
     ...scopedBase,
     accounts: scopedBase.accounts.filter((item) => (item.country_code || 'AE') === country),
     debts: scopedBase.debts.filter((item) => (item.country_code || 'AE') === country),
+    debtEvents: scopedBase.debtEvents.filter((event) => scopedBase.debts.some((debt) => debt.id === event.debt_id && (debt.country_code || 'AE') === country)),
     receivables: scopedBase.receivables.filter((item) => (item.country_code || 'AE') === country),
     investments: scopedBase.investments.filter((item) => (item.country_code || 'AE') === country),
     commitments: scopedBase.commitments.filter((item) => (item.country_code || 'AE') === country),
@@ -287,11 +324,12 @@ export default function NettApp() {
       if (!auth.session) { window.location.href = '/login?mode=signup'; return; }
       setSession({ userId: auth.session.user.id, email: auth.session.user.email });
       const userId = auth.session.user.id;
-      const [profile, workspaces, accounts, debts, receivables, investments, commitments, reserves, transactions, creditCards, spaces, investmentValues, fxRates] = await Promise.all([
+      const [profile, workspaces, accounts, debts, debtEvents, receivables, investments, commitments, reserves, transactions, creditCards, spaces, investmentValues, fxRates] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
         supabase.from('workspaces').select('*').eq('user_id', userId).eq('archived', false).order('created_at'),
         supabase.from('accounts').select('*').eq('user_id', userId).eq('archived', false).order('sort_order'),
         supabase.from('debts').select('*').eq('user_id', userId).neq('status', 'archived').order('created_at'),
+        supabase.from('debt_events').select('*').eq('user_id', userId).order('occurred_at', { ascending: false }).limit(300),
         supabase.from('receivables').select('*').eq('user_id', userId).neq('status', 'archived').order('created_at', { ascending: false }),
         supabase.from('investments').select('*').eq('user_id', userId).eq('archived', false).order('created_at'),
         supabase.from('commitments').select('*').eq('user_id', userId).neq('status', 'archived').order('due_date'),
@@ -314,7 +352,7 @@ export default function NettApp() {
       setEnabledCurrencies(normalizePreferenceValues(savedCurrencies, ['AED', 'INR'], currencyOptions));
       setPreferencesLoaded(true);
       setTheme((profile.data?.theme as Theme) || loadedProfile.theme || 'system');
-      setData((current) => ({ ...current, profile: loadedProfile, workspaces: workspaces.data || [], accounts: (accounts.data || []).map(hydrateAccountMetadata), debts: debts.data || [], receivables: receivables.data || [], investments: loadedInvestments, commitments: commitments.data || [], reserves: reserves.data || [], transactions: transactions.data || [], creditCards: (creditCards.data || []) as CreditCardRecord[], spaces: (spaces.data || []) as Space[], investmentValues: (investmentValues.data || []) as InvestmentValue[], fxRates: loadedRates, fxRateSource: fxRates.data?.length ? 'Supabase rate history' : 'Nett baseline rates', fxRatesUpdatedAt: fxRates.data?.[0]?.effective_at || null }));
+       setData((current) => ({ ...current, profile: loadedProfile, workspaces: workspaces.data || [], accounts: (accounts.data || []).map(hydrateAccountMetadata), debts: debts.data || [], debtEvents: (debtEvents.data || []) as DebtEvent[], receivables: receivables.data || [], investments: loadedInvestments, commitments: commitments.data || [], reserves: reserves.data || [], transactions: transactions.data || [], creditCards: (creditCards.data || []) as CreditCardRecord[], spaces: (spaces.data || []) as Space[], investmentValues: (investmentValues.data || []) as InvestmentValue[], fxRates: loadedRates, fxRateSource: fxRates.data?.length ? 'Supabase rate history' : 'Nett baseline rates', fxRatesUpdatedAt: fxRates.data?.[0]?.effective_at || null }));
       void fetchLiveRates().then(async (liveRates) => {
         if (!mounted || !Object.keys(liveRates).length) return;
         const effectiveAt = new Date().toISOString();
@@ -335,6 +373,13 @@ export default function NettApp() {
     setEditingTransaction(transaction || null);
     setTransactionSpaceId(spaceId || transaction?.space_id || null);
     setModal('transaction');
+  }
+
+  function openDebtEventModal(debtId?: string | null, eventType: 'borrowing' | 'repayment' = 'repayment', event?: DebtEvent | null) {
+    setEditingDebtEvent(event || null);
+    setDebtEventDebtId(debtId || event?.debt_id || null);
+    setDebtEventType(eventType);
+    setModal('debt-event');
   }
 
   async function signOut() {
@@ -553,6 +598,88 @@ export default function NettApp() {
     setModal(null); notify(eventType === 'repayment' ? 'Repayment recorded and debt progress updated.' : 'Additional borrowing recorded.');
   }
 
+  async function saveDebtEventV2(form: HTMLFormElement) {
+    const values = new FormData(form);
+    const debtId = String(values.get('debt_id'));
+    const eventType = String(values.get('event_type')) as DebtEvent['event_type'];
+    const amount = Number(values.get('amount'));
+    const target = data.debts.find((item) => item.id === debtId);
+    const previous = editingDebtEvent ? data.debtEvents.find((item) => item.id === editingDebtEvent.id) || null : null;
+    if (!target || !session || !['borrowing', 'repayment'].includes(eventType) || amount <= 0) { notify('Choose a loan and enter a positive amount.'); return; }
+    if (previous && previous.debt_id !== debtId) { notify('Keep an entry with its original loan.'); return; }
+    const sourceAccountId = String(values.get('source_account_id') || '') || null;
+    const note = String(values.get('note') || '').trim() || null;
+    const occurredAt = String(values.get('occurred_at') || new Date().toISOString().slice(0, 10));
+    const nextEvent: DebtEvent = { id: previous?.id || crypto.randomUUID(), debt_id: debtId, event_type: eventType, amount, currency: target.currency, source_account_id: sourceAccountId, note, occurred_at: occurredAt.includes('T') ? occurredAt : `${occurredAt}T12:00:00.000Z` };
+    let savedEvent = nextEvent;
+    const supabase = getSupabaseBrowser();
+
+    if (previous && supabase) {
+      const result = await supabase.from('debt_events').update({ event_type: eventType, amount, currency: target.currency, source_account_id: sourceAccountId, note, occurred_at: nextEvent.occurred_at }).eq('id', previous.id).eq('user_id', session.userId);
+      if (result.error) { notify(`Could not update debt entry: ${result.error.message}`); return; }
+      const oldDelta = debtEventBalanceDelta(previous);
+      const newDelta = debtEventBalanceDelta(nextEvent);
+      const accountDeltas = new Map<string, number>();
+      if (previous.source_account_id) accountDeltas.set(previous.source_account_id, (accountDeltas.get(previous.source_account_id) || 0) - oldDelta);
+      if (sourceAccountId) accountDeltas.set(sourceAccountId, (accountDeltas.get(sourceAccountId) || 0) + newDelta);
+      const debtEvents = data.debtEvents.map((item) => item.id === previous.id ? nextEvent : item);
+      const nextOutstanding = debtOutstandingFromEvents(target, debtEvents.filter((item) => item.debt_id === target.id));
+      const debtUpdate = await supabase.from('debts').update({ outstanding: nextOutstanding, status: nextOutstanding === 0 ? 'settled' : 'open' }).eq('id', target.id).eq('user_id', session.userId);
+      if (debtUpdate.error) { notify(`Entry updated, but loan balance failed: ${debtUpdate.error.message}`); return; }
+      const accountUpdates = await Promise.all([...accountDeltas.entries()].map(([accountId, delta]) => { const account = data.accounts.find((item) => item.id === accountId); return supabase.from('accounts').update({ estimated_balance: Number(account?.estimated_balance ?? account?.verified_balance ?? 0) + delta }).eq('id', accountId).eq('user_id', session.userId); }));
+      const failedAccount = accountUpdates.find((result) => result.error);
+      if (failedAccount?.error) { notify(`Entry updated, but an account balance failed: ${failedAccount.error.message}`); return; }
+      setData((current) => ({ ...current, debts: current.debts.map((item) => item.id === target.id ? { ...item, outstanding: nextOutstanding, status: nextOutstanding === 0 ? 'settled' : 'open' } : item), debtEvents: current.debtEvents.map((item) => item.id === nextEvent.id ? nextEvent : item), accounts: current.accounts.map((account) => { const delta = accountDeltas.get(account.id); return delta ? { ...account, estimated_balance: Number(account.estimated_balance ?? account.verified_balance ?? 0) + delta } : account; }) }));
+      setModal(null); setEditingDebtEvent(null); setDebtEventDebtId(null); notify('Debt entry updated.');
+      return;
+    }
+
+    if (supabase) {
+      const rpc = await supabase.rpc('nett_apply_debt_event', { p_user_id: session.userId, p_debt_id: debtId, p_event_type: eventType, p_amount: amount, p_currency: target.currency, p_source_account_id: sourceAccountId, p_note: note || '', p_occurred_at: nextEvent.occurred_at });
+      if (rpc.error && !isMissingFinancialMigration(rpc.error)) { notify(`Could not save debt entry: ${rpc.error.message}`); return; }
+      if (!rpc.error) {
+        const rpcPayload = rpc.data as { event?: Partial<DebtEvent> } | null;
+        if (rpcPayload?.event?.id) savedEvent = { ...nextEvent, id: String(rpcPayload.event.id), occurred_at: String(rpcPayload.event.occurred_at || nextEvent.occurred_at) };
+      }
+      if (rpc.error && isMissingFinancialMigration(rpc.error)) {
+        const eventInsert = await supabase.from('debt_events').insert({ id: nextEvent.id, user_id: session.userId, debt_id: debtId, event_type: eventType, amount, currency: target.currency, source_account_id: sourceAccountId, note, occurred_at: nextEvent.occurred_at }).select('*').single();
+        if (eventInsert.error) { notify(`Could not save debt entry: ${eventInsert.error.message}`); return; }
+        if (eventInsert.data) savedEvent = eventInsert.data as DebtEvent;
+        const nextOutstanding = Math.max(0, Number(target.outstanding) + debtEventBalanceDelta(savedEvent));
+        const debtUpdate = await supabase.from('debts').update({ outstanding: nextOutstanding, status: nextOutstanding === 0 ? 'settled' : 'open' }).eq('id', debtId).eq('user_id', session.userId);
+        if (debtUpdate.error) { notify(`Entry saved, but loan balance failed: ${debtUpdate.error.message}`); return; }
+        if (sourceAccountId) { const account = data.accounts.find((item) => item.id === sourceAccountId); const accountUpdate = await supabase.from('accounts').update({ estimated_balance: Number(account?.estimated_balance ?? account?.verified_balance ?? 0) + debtEventBalanceDelta(savedEvent) }).eq('id', sourceAccountId).eq('user_id', session.userId); if (accountUpdate.error) { notify(`Entry saved, but account balance failed: ${accountUpdate.error.message}`); return; } }
+      }
+    }
+
+    const nextOutstanding = Math.max(0, Number(target.outstanding) + debtEventBalanceDelta(savedEvent));
+    const spaceId = String(values.get('space_id') || '') || null;
+    const ledgerTransaction: Transaction | null = spaceId ? { id: crypto.randomUUID(), workspace_id: target.workspace_id, account_id: sourceAccountId, space_id: spaceId, type: eventType === 'borrowing' ? 'debt_borrowing' : 'debt_repayment', amount, currency: target.currency, category: eventType === 'borrowing' ? 'Debt borrowing' : 'Debt repayment', description: note || `${target.name} ${eventType}`, occurred_at: savedEvent.occurred_at } : null;
+    if (ledgerTransaction && supabase) { const result = await supabase.from('transactions').insert({ user_id: session.userId, ...ledgerTransaction }); if (result.error) { notify(`Loan saved, but the Space ledger entry failed: ${result.error.message}`); return; } }
+    setData((current) => ({ ...current, debts: current.debts.map((item) => item.id === debtId ? { ...item, outstanding: nextOutstanding, status: nextOutstanding === 0 ? 'settled' : 'open' } : item), debtEvents: [savedEvent, ...current.debtEvents], transactions: ledgerTransaction ? [ledgerTransaction, ...current.transactions] : current.transactions, accounts: current.accounts.map((account) => account.id === sourceAccountId ? { ...account, estimated_balance: Number(account.estimated_balance ?? account.verified_balance ?? 0) + debtEventBalanceDelta(savedEvent) } : account) }));
+    setModal(null); setEditingDebtEvent(null); setDebtEventDebtId(null); notify(eventType === 'repayment' ? 'Payment recorded and loan progress updated.' : 'Additional borrowing recorded.');
+  }
+
+  async function deleteDebtEvent(item: DebtEvent) {
+    if (!session) { notify('Sign in before deleting a debt entry.'); return; }
+    const target = data.debts.find((debt) => debt.id === item.debt_id);
+    if (!target) { notify('That loan is no longer available.'); return; }
+    const supabase = getSupabaseBrowser();
+    if (supabase) {
+      const result = await supabase.from('debt_events').delete().eq('id', item.id).eq('user_id', session.userId);
+      if (result.error) { notify(`Could not delete debt entry: ${result.error.message}`); return; }
+      const remaining = data.debtEvents.filter((event) => event.id !== item.id);
+      const nextOutstanding = debtOutstandingFromEvents(target, remaining.filter((event) => event.debt_id === target.id));
+      const debtUpdate = await supabase.from('debts').update({ outstanding: nextOutstanding, status: nextOutstanding === 0 ? 'settled' : 'open' }).eq('id', target.id).eq('user_id', session.userId);
+      if (debtUpdate.error) { notify(`Entry deleted, but loan balance failed: ${debtUpdate.error.message}`); return; }
+      if (item.source_account_id) { const account = data.accounts.find((entry) => entry.id === item.source_account_id); const accountUpdate = await supabase.from('accounts').update({ estimated_balance: Number(account?.estimated_balance ?? account?.verified_balance ?? 0) - debtEventBalanceDelta(item) }).eq('id', item.source_account_id).eq('user_id', session.userId); if (accountUpdate.error) { notify(`Entry deleted, but account balance failed: ${accountUpdate.error.message}`); return; } }
+      setData((current) => ({ ...current, debts: current.debts.map((debt) => debt.id === target.id ? { ...debt, outstanding: nextOutstanding, status: nextOutstanding === 0 ? 'settled' : 'open' } : debt), debtEvents: remaining, accounts: current.accounts.map((account) => account.id === item.source_account_id ? { ...account, estimated_balance: Number(account.estimated_balance ?? account.verified_balance ?? 0) - debtEventBalanceDelta(item) } : account) }));
+    } else {
+      setData((current) => ({ ...current, debtEvents: current.debtEvents.filter((event) => event.id !== item.id) }));
+    }
+    setModal(null); setDeletingDebtEvent(null); notify('Debt entry deleted.');
+  }
+
   async function createReceivable(form: HTMLFormElement) {
     const values = new FormData(form); const item: Receivable = { id: crypto.randomUUID(), workspace_id: String(values.get('workspace_id')), contact_name: String(values.get('contact_name')).trim(), amount: Number(values.get('amount')), outstanding: Number(values.get('amount')), currency: String(values.get('currency')), expected_on: String(values.get('expected_on') || ''), confidence: String(values.get('confidence')) as Receivable['confidence'], include_in_net_worth: values.get('include_in_net_worth') === 'true', status: 'open', country_code: String(values.get('country_code') || 'AE'), notes: String(values.get('notes') || '') || null };
     const supabase = getSupabaseBrowser();
@@ -739,10 +866,10 @@ export default function NettApp() {
       {tab === 'accounts' && <AccountsViewV3 data={scoped} displayCurrency={comparisonCurrency} country={country} countryOptions={activeCountryOptions} onCountryChange={setCountry} onQuick={(next) => setModal(next)} onEdit={(account) => { setEditingAccount(account); setModal('account'); }} onMove={(account) => { setMovingAccount(account); setModal('move-account-country'); }} onDelete={(account) => { setDeletingAccount(account); setModal('delete-account'); }} />}
       {tab === 'activity' && <ActivityViewV3 data={scoped} displayCurrency={displayCurrency} country={country} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} search={search} setSearch={setSearch} spaceFilter={spaceFilter} setSpaceFilter={setSpaceFilter} onQuick={(next) => setModal(next)} />}
       {tab === 'pots' && <PotsLedgerView data={scoped} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} onAddEntry={(space) => openTransactionModal(space.id)} onEditEntry={(transaction) => openTransactionModal(transaction.space_id, transaction)} onDeleteEntry={(transaction) => { setDeletingTransaction(transaction); setModal('delete-transaction'); }} />}
-      {tab === 'loans' && <LoansView data={scoped} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} onEditDebt={(item) => { setEditingDebt(item); setModal('debt'); }} onDeleteDebt={(item) => { setDeletingDebt(item); setModal('delete-debt'); }} />}
+      {tab === 'loans' && <LoansViewV4 data={scoped} displayCurrency={displayCurrency} onAddLoan={() => { setEditingDebt(null); setModal('debt'); }} onAddPayment={(debtId) => openDebtEventModal(debtId, 'repayment')} onAddBorrowing={(debtId) => openDebtEventModal(debtId, 'borrowing')} onEditEvent={(event) => openDebtEventModal(event.debt_id, event.event_type === 'borrowing' ? 'borrowing' : 'repayment', event)} onDeleteEvent={(event) => { setDeletingDebtEvent(event); setModal('delete-debt-event'); }} onQuick={(next) => setModal(next)} onEditDebt={(item) => { setEditingDebt(item); setModal('debt'); }} onDeleteDebt={(item) => { setDeletingDebt(item); setModal('delete-debt'); }} />}
       {tab === 'holdings' && <HoldingsView data={scoped} onQuick={(next) => setModal(next)} />}
-      {tab === 'bills' && <BillsView data={scoped} onQuick={(next) => setModal(next)} onEdit={(item) => { setEditingCommitment(item); setModal('commitment'); }} onDelete={(item) => { setDeletingCommitment(item); setModal('delete-commitment'); }} />}
-      {tab === 'spends' && <SpendsView data={scoped} onQuick={(next) => setModal(next)} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} />}
+      {tab === 'bills' && <BillsViewV4 data={scoped} onQuick={(next) => setModal(next)} onEdit={(item) => { setEditingCommitment(item); setModal('commitment'); }} onDelete={(item) => { setDeletingCommitment(item); setModal('delete-commitment'); }} />}
+      {tab === 'spends' && <SpendsViewV4 data={scoped} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onAddEntry={(space) => openTransactionModal(space.id)} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} />}
       {tab === 'plan' && <PlanViewV3 data={scoped} metrics={metrics} displayCurrency={displayCurrency} onQuick={(next) => setModal(next)} onEditCommitment={(item) => { setEditingCommitment(item); setModal('commitment'); }} onDeleteCommitment={(item) => { setDeletingCommitment(item); setModal('delete-commitment'); }} onEditDebt={(item) => { setEditingDebt(item); setModal('debt'); }} onDeleteDebt={(item) => { setDeletingDebt(item); setModal('delete-debt'); }} onAddSpace={() => { setEditingSpace(null); setModal('space'); }} onEditSpace={(space) => { setEditingSpace(space); setModal('space'); }} onDeleteSpace={(space) => { setDeletingSpace(space); setModal('delete-space'); }} whatIf={whatIf} setWhatIf={setWhatIf} whatIfResult={whatIfResult} runWhatIf={runWhatIf} />}
       {(tab === 'settings' || tab === 'more') && <div className="settings-view"><MoreView data={data} theme={theme} setTheme={updateTheme} pushEnabled={pushEnabled} enableNotifications={enableNotifications} exportData={exportData} exportCsv={exportCsv} exportXlsx={exportXlsx} session={!!session} enabledCountries={enabledCountries} enabledCurrencies={enabledCurrencies} onToggleCountry={toggleCountry} onToggleCurrency={toggleCurrency} onResetViewOptions={resetViewOptions} onQuick={(next) => setModal(next)} onNavigate={setTab} /></div>}
     </main>
@@ -758,7 +885,8 @@ export default function NettApp() {
     {modal === 'delete-commitment' && deletingCommitment && <DeleteCommitmentModal item={deletingCommitment} onClose={() => { setModal(null); setDeletingCommitment(null); }} onDelete={() => void deleteCommitment(deletingCommitment)} />}
     {modal === 'debt' && <DebtEditorModal debt={editingDebt} workspaces={data.workspaces} onClose={() => { setModal(null); setEditingDebt(null); }} onSave={saveDebt} />}
     {modal === 'delete-debt' && deletingDebt && <DeleteDebtModal item={deletingDebt} onClose={() => { setModal(null); setDeletingDebt(null); }} onDelete={() => void deleteDebt(deletingDebt)} />}
-    {modal === 'debt-event' && <DebtModalV3 debts={data.debts} accounts={data.accounts} spaces={data.spaces} onClose={() => setModal(null)} onSave={createDebtEvent} />}
+    {modal === 'debt-event' && <DebtEventModalV4 debts={data.debts} accounts={data.accounts} spaces={data.spaces} event={editingDebtEvent} defaultDebtId={debtEventDebtId} defaultEventType={debtEventType} onClose={() => { setModal(null); setEditingDebtEvent(null); setDebtEventDebtId(null); }} onSave={saveDebtEventV2} />}
+    {modal === 'delete-debt-event' && deletingDebtEvent && <DeleteDebtEventModal item={deletingDebtEvent} onClose={() => { setModal(null); setDeletingDebtEvent(null); }} onDelete={() => void deleteDebtEvent(deletingDebtEvent)} />}
     {modal === 'receivable' && <ReceivableModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createReceivable} />}
     {modal === 'receivable-event' && <ReceivableEventModal receivables={data.receivables} accounts={data.accounts} onClose={() => setModal(null)} onSave={createReceivableEvent} />}
     {modal === 'investment' && <InvestmentModal workspaces={data.workspaces} onClose={() => setModal(null)} onSave={createInvestment} />}
@@ -904,8 +1032,17 @@ function LoansView({ data, displayCurrency, onQuick, onEditDebt, onDeleteDebt }:
   return <div className="page-panel reference-page"><div className="view-header"><div><div className="eyebrow"><ArrowDownLeft size={13} /> Progress, not pressure</div><h2>Loans</h2><p>Track what you owe and what people owe you, with partial payments and honest progress.</p></div><button className="primary-button" onClick={() => onQuick('debt')}><Plus size={16} /> Add loan</button></div><div className="reference-card-grid">{data.debts.map((debt) => { const progress = debtProgress(debt); return <article className="reference-card loan-card" key={debt.id}><div className="reference-card-top"><div><h3>{debt.name}</h3><span className="pill dark-pill">You owe · {debt.currency}</span></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEditDebt(debt)} aria-label={`Edit ${debt.name}`}><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDeleteDebt(debt)} aria-label={`Delete ${debt.name}`}><Trash2 size={15} /></button></div></div><div className="reference-card-label">Remaining</div><strong className="reference-card-value">{formatCurrency(Number(debt.outstanding), debt.currency)}</strong><div className="reference-card-meta">{Math.round(progress)}% repaid · {formatCurrency(Number(debt.original_principal), debt.currency)} original</div><div className="reference-progress"><span style={{ width: `${progress}%` }} /></div><div className="reference-card-actions-row"><button className="soft-button" onClick={() => onQuick('debt-event')}><ArrowDownLeft size={14} /> Log payment</button><button className="soft-button" onClick={() => onQuick('debt-event')}><ArrowUpRight size={14} /> Add to loan</button></div></article>; })}</div>{data.receivables.length > 0 && <section className="reference-subsection"><div className="reference-subsection-heading"><div><h3>Owed to you</h3><p>Kept separate from cash until it arrives.</p></div><button className="soft-button" onClick={() => onQuick('receivable')}><Plus size={14} /> Add receivable</button></div><div className="reference-card-grid">{data.receivables.map((item) => <article className="reference-card receivable-card" key={item.id}><div className="reference-card-top"><div><h3>{item.contact_name}</h3><span className="pill">Owed to you · {item.currency}</span></div></div><div className="reference-card-label">Remaining to receive</div><strong className="reference-card-value">{formatCurrency(Number(item.outstanding), item.currency)}</strong><div className="reference-card-meta">{item.confidence} · {item.expected_on ? `expected ${formatShortDate(item.expected_on)}` : 'no date set'}</div><button className="soft-button full" onClick={() => onQuick('receivable-event')}><Check size={14} /> Record payment</button></article>)}</div></section>}{!data.debts.length && !data.receivables.length && <div className="empty-state compact"><ArrowDownLeft size={22} /><strong>No loans recorded</strong><span>Add a family loan, credit-card balance or informal IOU.</span><button className="primary-button" onClick={() => onQuick('debt')}><Plus size={14} /> Add first loan</button></div>}</div>;
 }
 
+function LoansViewV4({ data, displayCurrency, onAddLoan, onAddPayment, onAddBorrowing, onEditEvent, onDeleteEvent, onQuick, onEditDebt, onDeleteDebt }: { data: NettData; displayCurrency: string; onAddLoan: () => void; onAddPayment: (debtId: string) => void; onAddBorrowing: (debtId: string) => void; onEditEvent: (event: DebtEvent) => void; onDeleteEvent: (event: DebtEvent) => void; onQuick: (modal: Modal) => void; onEditDebt: (item: Debt) => void; onDeleteDebt: (item: Debt) => void }) {
+  const [expandedDebtId, setExpandedDebtId] = useState<string | null>(null);
+  return <div className="page-panel reference-page loans-reference-page"><div className="view-header"><div><div className="eyebrow"><ArrowDownLeft size={13} /> Progress, not pressure</div><h2>Loans</h2><p>Money you owe and money owed to you — with clear progress and a ledger that stays attached to each loan.</p></div><button className="primary-button" onClick={onAddLoan}><Plus size={16} /> Add loan</button></div>{data.debts.length ? <div className="reference-card-grid">{data.debts.map((debt) => { const progress = debtProgress(debt); const paid = Math.max(0, Number(debt.original_principal) - Number(debt.outstanding)); const events = data.debtEvents.filter((event) => event.debt_id === debt.id).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)); const visibleEvents = expandedDebtId === debt.id ? events : events.slice(0, 5); return <article className="reference-card loan-card loan-ledger-card" key={debt.id}><div className="reference-card-top"><div><h3>{debt.name}</h3><span className="pill dark-pill">You owe · {debt.currency}</span></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEditDebt(debt)} aria-label={`Edit ${debt.name}`} title="Edit loan"><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDeleteDebt(debt)} aria-label={`Delete ${debt.name}`} title="Delete loan"><Trash2 size={15} /></button></div></div><div className="reference-card-label">Paid</div><div className="loan-value-row"><strong className="reference-card-value">{formatCurrency(paid, debt.currency)}</strong><span>out of {formatCurrency(Number(debt.original_principal), debt.currency)}</span></div><div className="reference-progress"><span style={{ width: `${progress}%` }} /></div><div className="reference-card-meta">{Math.round(progress)}% paid · {formatCurrency(Number(debt.outstanding), debt.currency)} left{debt.due_date ? ` · due ${formatShortDate(debt.due_date)}` : ''}</div><div className="reference-card-actions-row"><button className="soft-button" onClick={() => onAddPayment(debt.id)}><ArrowDownLeft size={14} /> Log payment</button><button className="soft-button" onClick={() => onAddBorrowing(debt.id)}><ArrowUpRight size={14} /> Add to loan</button></div><div className="reference-divider" /><div className="loan-ledger-heading"><span>Ledger</span><span>{events.length} {events.length === 1 ? 'entry' : 'entries'}</span></div>{events.length ? <div className="loan-ledger-list">{visibleEvents.map((event) => { const borrowing = event.event_type === 'borrowing'; return <div className="loan-ledger-row" key={event.id}><span className={`loan-ledger-icon ${borrowing ? 'borrowing' : 'repayment'}`}>{borrowing ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}</span><div className="loan-ledger-copy"><strong>{event.note || (borrowing ? 'Additional borrowing' : 'Repayment')}</strong><span>{formatShortDate(event.occurred_at)}</span></div><strong className={borrowing ? 'loan-ledger-positive' : 'loan-ledger-negative'}>{borrowing ? '+' : '-'}{formatCurrency(Number(event.amount), event.currency, true)}</strong><div className="loan-ledger-actions"><button className="icon-button" onClick={() => onEditEvent(event)} aria-label={`Edit ${event.note || 'debt entry'}`}><Pencil size={14} /></button><button className="icon-button danger-icon" onClick={() => onDeleteEvent(event)} aria-label={`Delete ${event.note || 'debt entry'}`}><Trash2 size={14} /></button></div></div>; })}</div> : <div className="loan-ledger-empty">No payments or extra borrowing yet.</div>}{events.length > 5 && <button className="view-link loan-ledger-more" onClick={() => setExpandedDebtId(expandedDebtId === debt.id ? null : debt.id)}>{expandedDebtId === debt.id ? 'Show latest 5' : 'View full ledger'}</button>}</article>; })}</div> : <div className="empty-state compact"><ArrowDownLeft size={22} /><strong>No loans recorded</strong><span>Add a family loan, credit-card balance or informal IOU.</span><button className="primary-button" onClick={onAddLoan}><Plus size={14} /> Add first loan</button></div>}{data.receivables.length > 0 && <section className="reference-subsection"><div className="reference-subsection-heading"><div><h3>Owed to you</h3><p>Keep receivables separate until the money actually arrives.</p></div><button className="soft-button" onClick={() => onQuick('receivable')}><Plus size={14} /> Add receivable</button></div><div className="reference-card-grid">{data.receivables.map((item) => <article className="reference-card receivable-card" key={item.id}><div className="reference-card-top"><div><h3>{item.contact_name}</h3><span className="pill">Owed to you · {item.currency}</span></div></div><div className="reference-card-label">Remaining to receive</div><strong className="reference-card-value">{formatCurrency(Number(item.outstanding), item.currency)}</strong><div className="reference-card-meta">{item.confidence} · {item.expected_on ? `expected ${formatShortDate(item.expected_on)}` : 'no date set'}</div><button className="soft-button full" onClick={() => onQuick('receivable-event')}><Check size={14} /> Record payment</button></article>)}</div></section>}</div>;
+}
+
 function BillsView({ data, onQuick, onEdit, onDelete }: { data: NettData; onQuick: (modal: Modal) => void; onEdit: (item: Commitment) => void; onDelete: (item: Commitment) => void }) {
   return <div className="page-panel reference-page"><div className="view-header"><div><div className="eyebrow"><CalendarClock size={13} /> Protect future you</div><h2>Upcoming bills</h2><p>Future expenses such as insurance, renewals and maintenance—before you tap your card.</p></div><button className="primary-button" onClick={() => onQuick('commitment')}><Plus size={16} /> Add bill</button></div>{data.commitments.length ? <div className="bill-list">{data.commitments.map((item) => <article className={`reference-bill ${item.importance === 'mandatory' ? 'mandatory' : ''}`} key={item.id}><span className="bill-check" /><div className="bill-copy"><strong>{item.name}</strong><span><span className="pill">{item.recurrence.replace('_', ' ')}</span> {item.expected_income ? 'Expected income' : item.importance} · {formatShortDate(item.due_date)}</span></div><strong className="bill-amount">{formatCurrency(Number(item.amount), item.currency)}</strong><div className="reference-card-actions"><button className="icon-button" onClick={() => onEdit(item)} aria-label={`Edit ${item.name}`}><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDelete(item)} aria-label={`Delete ${item.name}`}><Trash2 size={15} /></button></div></article>)}</div> : <div className="empty-state compact"><CalendarClock size={22} /><strong>No bills planned</strong><span>Add recurring or one-time obligations so future-you is protected.</span><button className="primary-button" onClick={() => onQuick('commitment')}><Plus size={14} /> Add first bill</button></div>}</div>;
+}
+
+function BillsViewV4({ data, onQuick, onEdit, onDelete }: { data: NettData; onQuick: (modal: Modal) => void; onEdit: (item: Commitment) => void; onDelete: (item: Commitment) => void }) {
+  return <div className="page-panel reference-page bills-reference-page"><div className="view-header"><div><div className="eyebrow"><CalendarClock size={13} /> Protect future you</div><h2>Upcoming bills</h2><p>Future expenses — insurance, renewals and maintenance — so you never tap your card blind.</p></div><button className="primary-button" onClick={() => onQuick('commitment')}><Plus size={16} /> Add bill</button></div>{data.commitments.length ? <div className="reference-card-grid">{data.commitments.map((item) => { const days = Math.ceil((new Date(`${item.due_date}T12:00:00`).getTime() - Date.now()) / 86400000); const dueLabel = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'Due today' : `in ${days}d`; return <article className={`reference-card bill-card ${days < 0 ? 'overdue' : ''}`} key={item.id}><div className="reference-card-top"><div className="bill-card-title"><span className="bill-check" aria-hidden="true" /><div><h3>{item.name}</h3><span className="pill">{item.recurrence.replace('_', ' ')}</span></div></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEdit(item)} aria-label={`Edit ${item.name}`} title="Edit bill"><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDelete(item)} aria-label={`Delete ${item.name}`} title="Delete bill"><Trash2 size={15} /></button></div></div><div className="bill-card-due"><span className={days < 0 ? 'danger-text' : ''}>{dueLabel}</span><strong>{formatCurrency(Number(item.amount), item.currency)}</strong></div><div className="reference-card-meta">Due {formatShortDate(item.due_date)} · {item.expected_income ? 'Expected income' : item.importance}{item.confidence ? ` · ${item.confidence}` : ''}</div>{item.notes && <p className="bill-card-note">{item.notes}</p>}</article>; })}</div> : <div className="empty-state compact"><CalendarClock size={22} /><strong>No bills planned</strong><span>Add recurring or one-time obligations so future-you is protected.</span><button className="primary-button" onClick={() => onQuick('commitment')}><Plus size={14} /> Add first bill</button></div>}</div>;
 }
 
 function HoldingsView({ data, onQuick }: { data: NettData; onQuick: (modal: Modal) => void }) {
@@ -914,6 +1051,10 @@ function HoldingsView({ data, onQuick }: { data: NettData; onQuick: (modal: Moda
 
 function SpendsView({ data, onQuick, onAddSpace, onEditSpace, onDeleteSpace }: { data: NettData; onQuick: (modal: Modal) => void; onAddSpace: () => void; onEditSpace: (space: Space) => void; onDeleteSpace: (space: Space) => void }) {
   return <div className="page-panel reference-page"><div className="view-header"><div><div className="eyebrow"><CreditCard size={13} /> Purpose-led spending</div><h2>Spends</h2><p>Track what you put into a car, a business, a trip or any project—separate from your net worth.</p></div><button className="primary-button" onClick={onAddSpace}><Plus size={16} /> New tracker</button></div>{data.spaces.length ? <div className="reference-card-grid">{data.spaces.map((space) => { const entries = data.transactions.filter((item) => item.space_id === space.id); const net = entries.reduce((sum, item) => { const amount = displayAmount(Number(item.amount), item.currency, space.currency, data.fxRates); return sum + (item.type === 'credit' ? -amount : amount); }, 0); return <article className="reference-card spend-card" key={space.id}><div className="reference-card-top"><div><h3>{space.name}</h3><span className="pill">Spend tracker · {space.currency}</span></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEditSpace(space)} aria-label={`Edit ${space.name}`}><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDeleteSpace(space)} aria-label={`Delete ${space.name}`}><Trash2 size={15} /></button></div></div><div className="reference-card-label">Lifetime cost</div><strong className="reference-card-value">{formatCurrency(net, space.currency)}</strong><div className="reference-card-meta">{entries.length} entries · {space.notes || 'Separate ledger for this purpose'}</div><div className="reference-card-actions-row"><button className="soft-button" onClick={() => onQuick('transaction')}><Plus size={14} /> Add entry</button><button className="soft-button" onClick={() => onEditSpace(space)}><Pencil size={14} /> Edit tracker</button></div></article>; })}</div> : <div className="empty-state compact"><CreditCard size={22} /><strong>No spend trackers yet</strong><span>Make your car, business or travel costs their own connected ledger.</span><button className="primary-button" onClick={onAddSpace}><Plus size={14} /> Create tracker</button></div>}</div>;
+}
+
+function SpendsViewV4({ data, onAddSpace, onAddEntry, onEditSpace, onDeleteSpace }: { data: NettData; onAddSpace: () => void; onAddEntry: (space: Space) => void; onEditSpace: (space: Space) => void; onDeleteSpace: (space: Space) => void }) {
+  return <div className="page-panel reference-page spends-reference-page"><div className="view-header"><div><div className="eyebrow"><CreditCard size={13} /> Purpose-led spending</div><h2>Spends</h2><p>Track what you put into a car, a business, a trip or a side project — separate from your net worth.</p></div><button className="primary-button" onClick={onAddSpace}><Plus size={16} /> New tracker</button></div>{data.spaces.length ? <div className="reference-card-grid">{data.spaces.map((space) => { const entries = data.transactions.filter((item) => item.space_id === space.id).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)); const byCategory = entries.reduce<Record<string, number>>((result, item) => { if (item.type !== 'debit' && item.type !== 'debt_repayment') return result; const key = item.category || 'Other'; result[key] = (result[key] || 0) + displayAmount(Number(item.amount), item.currency, space.currency, data.fxRates); return result; }, {}); const totalCost = Object.values(byCategory).reduce((sum, value) => sum + value, 0); const cashback = entries.filter((item) => item.type === 'credit').reduce((sum, item) => sum + displayAmount(Number(item.amount), item.currency, space.currency, data.fxRates), 0); const categoryEntries = Object.entries(byCategory).sort(([, a], [, b]) => b - a); return <article className="reference-card spend-card spend-ledger-card" key={space.id}><div className="reference-card-top"><div><h3>{space.name}</h3><span className="pill">Cost tracker · {space.currency}</span></div><div className="reference-card-actions"><button className="icon-button" onClick={() => onEditSpace(space)} aria-label={`Edit ${space.name}`} title="Edit tracker"><Pencil size={15} /></button><button className="icon-button danger-icon" onClick={() => onDeleteSpace(space)} aria-label={`Delete ${space.name}`} title="Delete tracker"><Trash2 size={15} /></button></div></div><div className="reference-card-label">Lifetime cost</div><div className="spend-value-row"><strong className="reference-card-value">{formatCurrency(totalCost - cashback, space.currency)}</strong><span>Expense: {formatCurrency(totalCost, space.currency, true)}<br />Cashback: {formatCurrency(cashback, space.currency, true)}</span></div>{totalCost > 0 && <><div className="spend-breakdown"><span style={{ width: `${Math.max(3, categoryEntries[0] ? categoryEntries[0][1] / totalCost * 100 : 0)}%` }} /><span style={{ width: `${Math.max(3, categoryEntries[1] ? categoryEntries[1][1] / totalCost * 100 : 0)}%` }} /><span style={{ width: `${Math.max(3, categoryEntries[2] ? categoryEntries[2][1] / totalCost * 100 : 0)}%` }} /><span style={{ width: `${Math.max(3, categoryEntries[3] ? categoryEntries[3][1] / totalCost * 100 : 0)}%` }} /></div><div className="spend-breakdown-legend">{categoryEntries.slice(0, 4).map(([category], index) => <span key={category}><i className={`spend-dot dot-${index}`} />{category}</span>)}</div></>}{!entries.length && <div className="reference-card-meta">No entries yet. Keep this tracker ready for your next update.</div>}<div className="reference-card-actions-row"><button className="soft-button" onClick={() => onAddEntry(space)}><Plus size={14} /> Add entry</button><button className="soft-button" onClick={() => onEditSpace(space)}><Pencil size={14} /> Edit tracker</button></div><div className="reference-divider" /><div className="spend-ledger-heading"><span>Recent entries</span><span>{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span></div>{entries.length ? <div className="spend-ledger-list">{entries.slice(0, 6).map((entry) => <div className="spend-ledger-row" key={entry.id}><span className="spend-ledger-arrow"><ArrowDownLeft size={14} /></span><div><strong>{entry.category || 'Expense'}</strong><span>{entry.description || 'Purpose-led entry'} · {formatShortDate(entry.occurred_at)}</span></div><strong>{entry.type === 'credit' ? '+' : '-'}{formatCurrency(Number(entry.amount), entry.currency, true)}</strong></div>)}</div> : <div className="spend-ledger-empty">Add your first cost to see the tracker build over time.</div>}{entries.length > 6 && <button className="view-link spend-ledger-more">Showing the latest 6 entries</button>}</article>; })}</div> : <div className="empty-state compact"><CreditCard size={22} /><strong>No spend trackers yet</strong><span>Make your car, business or travel costs their own connected ledger.</span><button className="primary-button" onClick={onAddSpace}><Plus size={14} /> Create tracker</button></div>}</div>;
 }
 
 function AccountsViewV2({ data, displayCurrency, onQuick }: { data: NettData; displayCurrency: string; onQuick: (modal: Modal) => void }) {
@@ -1105,5 +1246,7 @@ function DeleteTransactionModal({ item, onClose, onDelete }: { item: Transaction
 function DeleteCommitmentModal({ item, onClose, onDelete }: { item: Commitment; onClose: () => void; onDelete: () => void }) { return <ModalShell title={`Delete ${item.name}?`} description="This removes the future commitment from your plan and Safe to Spend calculations." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>Delete this commitment?</strong><span>It will be removed from your signed-in Nett account.</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep commitment</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete commitment</button></div></ModalShell>; }
 
 function DeleteDebtModal({ item, onClose, onDelete }: { item: Debt; onClose: () => void; onDelete: () => void }) { return <ModalShell title={`Delete ${item.name}?`} description="This removes the debt from your plan and net-worth calculations." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>Delete this debt?</strong><span>Existing account activity is not removed.</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep debt</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete debt</button></div></ModalShell>; }
+
+function DeleteDebtEventModal({ item, onClose, onDelete }: { item: DebtEvent; onClose: () => void; onDelete: () => void }) { return <ModalShell title="Delete this loan entry?" description="The loan balance and linked account estimate will be recalculated." onClose={onClose}><div className="delete-confirmation"><Trash2 size={20} /><strong>{item.note || (item.event_type === 'borrowing' ? 'Additional borrowing' : 'Repayment')}</strong><span>{formatCurrency(Number(item.amount), item.currency)} · {formatShortDate(item.occurred_at)}</span></div><div className="modal-actions"><button type="button" className="soft-button" onClick={onClose}>Keep entry</button><button type="button" className="danger-button" onClick={onDelete}><Trash2 size={15} /> Delete entry</button></div></ModalShell>; }
 
 function urlBase64ToUint8Array(base64String: string) { const padding = '='.repeat((4 - base64String.length % 4) % 4); const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/'); const rawData = window.atob(base64); return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0))); }

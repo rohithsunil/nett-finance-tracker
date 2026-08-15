@@ -16,6 +16,7 @@ export const demoData: NettData = {
     { id: 'card', workspace_id: 'personal', name: 'Emirates Card', debt_class: 'mandatory', original_principal: 12000, outstanding: 4380, currency: 'AED', due_date: '2026-08-18', status: 'open' },
     { id: 'family', workspace_id: 'personal', name: 'Family loan', debt_class: 'flexible', original_principal: 77500, outstanding: 77500, currency: 'AED', comfortable_target: 2000, status: 'open' },
   ],
+  debtEvents: [],
   receivables: [
     { id: 'alina', workspace_id: 'personal', contact_name: 'Alina Ho', amount: 8475, outstanding: 8475, currency: 'AED', expected_on: '2026-08-12', confidence: 'confirmed', include_in_net_worth: false, status: 'open' },
   ],

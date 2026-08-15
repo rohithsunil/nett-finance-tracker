@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.12.0';
+export const APP_VERSION = '1.13.0';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,20 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Reference ledgers across the app',
+    commit: 'pending',
+    summary: 'Loans, Spends and Bills now use the same calm, card-first workflow with clear actions, progress and history on desktop and mobile.',
+    changes: [
+      'Rebuilt Loans as a two-column card grid with repayment progress, outstanding balance, due date, scoped Log payment and Add to loan actions.',
+      'Added a real loan ledger with persistent borrowing and repayment events, edit/delete controls, full-history expansion and account balance reconciliation.',
+      'Rebuilt Spends as purpose-led cost tracker cards with category breakdowns, lifetime cost, cashback, recent entries and a correctly scoped Add entry action.',
+      'Rebuilt Upcoming bills as responsive cards with recurrence, due status, amount, notes and always-visible edit/delete controls.',
+      'Kept the layouts aligned, neutral and touch-friendly across light, dark, AMOLED, desktop browser and installed PWA surfaces.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,

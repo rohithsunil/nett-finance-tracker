@@ -1,5 +1,15 @@
 # Nett release notes
 
+## 1.13.0 - 2026-08-15 - Reference ledgers across the app
+
+GitHub commit: `pending`
+
+- Rebuilt Loans as a two-column card grid with repayment progress, outstanding balance, due date, scoped Log payment and Add to loan actions.
+- Added a real loan ledger with persistent borrowing and repayment events, edit/delete controls, full-history expansion and account balance reconciliation.
+- Rebuilt Spends as purpose-led cost tracker cards with category breakdowns, lifetime cost, cashback, recent entries and a correctly scoped Add entry action.
+- Rebuilt Upcoming bills as responsive cards with recurrence, due status, amount, notes and always-visible edit/delete controls.
+- Kept the layouts aligned, neutral and touch-friendly across light, dark, AMOLED, desktop browser and installed PWA surfaces.
+
 ## 1.12.0 - 2026-08-15 - Pot ledger repair
 
 GitHub commit: [`7d89ef6`](https://github.com/rohithsunil/nett-finance-tracker/commit/7d89ef6)

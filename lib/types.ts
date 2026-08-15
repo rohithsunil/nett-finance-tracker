@@ -55,6 +55,17 @@ export interface Debt {
   notes?: string | null;
 }
 
+export interface DebtEvent {
+  id: string;
+  debt_id: string;
+  event_type: 'borrowing' | 'repayment' | 'adjustment' | 'reclassification';
+  amount: number | string;
+  currency: Currency;
+  source_account_id?: string | null;
+  occurred_at: string;
+  note?: string | null;
+}
+
 export interface Receivable {
   id: string;
   workspace_id: string;
@@ -168,6 +179,7 @@ export interface NettData {
   workspaces: Workspace[];
   accounts: Account[];
   debts: Debt[];
+  debtEvents: DebtEvent[];
   receivables: Receivable[];
   investments: Investment[];
   commitments: Commitment[];
