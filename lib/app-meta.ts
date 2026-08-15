@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: RELEASE_DATE,
     title: 'A simpler Nett, built around your money',
-    commit: 'pending',
+    commit: '012bedd',
     summary: 'Nett now follows the reference app’s calmer flow: one bento dashboard, a persistent desktop menu, a focused mobile navigation and less chrome around every task.',
     changes: [
       'Simplified desktop navigation to Dashboard, Accounts, Pots, Loans, Holdings, Bills, Spends, Recurring, Forecast, Budget and Settings.',
