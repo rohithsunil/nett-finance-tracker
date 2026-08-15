@@ -1,5 +1,13 @@
 # Nett release notes
 
+## 1.11.1 - 2026-08-15 - Reference card designs
+
+GitHub commit: [`b2b8d49`](https://github.com/rohithsunil/nett-finance-tracker/commit/b2b8d49)
+
+- Restored the net-worth amount and currency hierarchy from the reference card, with the currency suffix aligned to the value baseline.
+- Added the clipped concentric rings to Safe to Spend and kept its progress bar, protected amount and free percentage balanced inside the card.
+- Kept both cards readable at tablet widths and visually consistent in dark and AMOLED themes.
+
 ## 1.11.0 - 2026-08-15 - Aligned cockpit and decision check
 
 GitHub commit: [`ac7fe06`](https://github.com/rohithsunil/nett-finance-tracker/commit/ac7fe06)

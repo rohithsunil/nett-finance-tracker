@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.11.0';
+export const APP_VERSION = '1.11.1';
 export const RELEASE_DATE = '2026-08-15';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -12,6 +12,18 @@ export type ChangelogEntry = {
 };
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: APP_VERSION,
+    date: RELEASE_DATE,
+    title: 'Reference card designs',
+    commit: 'b2b8d49',
+    summary: 'The dashboard cards now visibly match Nett’s reference treatment, including the pink net-worth glow and the dark Safe to Spend rings.',
+    changes: [
+      'Restored the net-worth amount and currency hierarchy from the reference card, with the currency suffix aligned to the value baseline.',
+      'Added the clipped concentric rings to Safe to Spend and kept its progress bar, protected amount and free percentage balanced inside the card.',
+      'Kept both cards readable at tablet widths and visually consistent in dark and AMOLED themes.',
+    ],
+  },
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
