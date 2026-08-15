@@ -414,7 +414,7 @@ html[data-theme='amoled'] { --bg:#000; --surface:#09090b; --surface-muted:#11111
 /* Nett 1.9 application-wide responsive system pass. Keep the brand; make every surface easier to reach. */
 :root {
   --nav:248px;
-  --content-max:1440px;
+  --content-max:1700px;
   --touch-target:44px;
   --safe-top:env(safe-area-inset-top, 0px);
   --safe-right:env(safe-area-inset-right, 0px);
@@ -428,13 +428,16 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 button:disabled { cursor:not-allowed; }
 .app-shell { min-height:100dvh; }
 .desktop-sidebar { width:var(--nav); height:100dvh; max-height:100dvh; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:24px 16px calc(20px + var(--safe-bottom)); }
-.main { width:auto; min-width:0; min-height:100dvh; margin-left:var(--nav); padding:clamp(28px, 4vw, 48px) clamp(24px, 4vw, 64px) calc(64px + var(--safe-bottom)); }
+.main { width:calc(100% - var(--nav)); flex:1 1 auto; min-width:0; min-height:100dvh; margin-left:var(--nav); padding:clamp(28px, 4vw, 48px) clamp(24px, 4vw, 64px) calc(64px + var(--safe-bottom)); }
 .main > *, .page-panel { min-width:0; max-width:var(--content-max); }
 .page-panel { margin-inline:auto; }
 .topbar, .demo-bar, .rate-context, .dashboard-grid, .content-grid { max-width:var(--content-max); }
 .nav-button { min-height:var(--touch-target); }
 .icon-button { width:var(--touch-target); min-width:var(--touch-target); min-height:var(--touch-target); }
-.soft-button, .primary-button, .edit-account-button, .danger-button, .view-link { min-height:var(--touch-target); }
+.soft-button, .primary-button, .edit-account-button, .danger-button, .view-link { min-height:var(--touch-target); font-size:14px; }
+.nav-caption { font-size:14px; }
+.workspace-name, .workspace-switcher select, .desktop-sidebar > select { font-size:14px !important; }
+.user-chip { font-size:13px; }
 input:not([type='checkbox']):not([type='radio']), select { min-height:var(--touch-target); }
 textarea { min-height:112px; }
 .card, .reference-card, .reference-bill, .account-detail-card, .empty-state, .settings-row { overflow-wrap:anywhere; }
@@ -454,10 +457,11 @@ textarea { min-height:112px; }
   html, body { min-height:100dvh; }
   .desktop-sidebar { display:none; }
   .app-shell { display:block; min-height:100dvh; }
-  .main { width:100%; margin-left:0; padding: max(24px, calc(var(--safe-top) + 18px)) 16px calc(154px + var(--safe-bottom)); }
+  .main { width:100%; flex:none; margin-left:0; padding: max(24px, calc(var(--safe-top) + 18px)) 16px calc(154px + var(--safe-bottom)); }
+  .main, .main button, .main input, .main select, .main textarea, .main label { font-size:14px; }
   .topbar { align-items:flex-start; gap:12px; margin-bottom:16px; }
   .topbar h1 { max-width:calc(100vw - 136px); font-size:clamp(26px, 7vw, 32px); line-height:1.08; }
-  .topbar p { max-width:100%; font-size:13px; line-height:1.45; }
+  .topbar p { max-width:100%; font-size:14px; line-height:1.5; }
   .top-actions { flex:none; gap:8px; }
   .top-actions .soft-button { display:none; }
   .view-header { align-items:flex-start; gap:14px; }
@@ -467,10 +471,10 @@ textarea { min-height:112px; }
   .view-header .action-row { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); }
   .view-header .action-row > * { min-width:0; }
   .rate-context { margin:0 0 14px; }
-  .rate-copy span { font-size:10px; }
+  .rate-copy span, .rate-select, .mobile-context-trigger { font-size:14px; }
   .mobile-context-trigger { min-height:44px; }
   .mobile-nav { left:12px; right:12px; bottom:calc(12px + var(--safe-bottom)); height:76px; padding:7px; border-radius:26px; }
-  .mobile-nav button { min-height:60px; gap:5px; font-size:11px; }
+  .mobile-nav button { min-height:60px; gap:5px; font-size:14px; }
   .mobile-nav button svg { width:20px; height:20px; }
   .mobile-nav button.active { border-radius:19px; }
   .mobile-quick-add { right:22px; bottom:calc(108px + var(--safe-bottom)); width:54px; height:54px; min-height:54px; border-radius:19px; }
@@ -500,10 +504,35 @@ textarea { min-height:112px; }
   .auth-card { padding:28px 22px 24px; }
   .onboarding-card { padding:23px 20px calc(23px + var(--safe-bottom)); }
   .auth-form, .onboarding-form { gap:15px; }
-  label { font-size:13px; line-height:1.35; }
+  label { font-size:14px; line-height:1.45; }
   .form-message { align-items:flex-start; line-height:1.45; }
   .toast { bottom:calc(102px + var(--safe-bottom)); max-width:calc(100vw - 32px); }
 }
+
+@media (max-width:720px) {
+  /* Supporting copy should be readable too; display values and overlines keep their hierarchy. */
+  .card-meta, .card-kicker, .table-muted, .stat-top, .stat-note, .account-type, .account-converted,
+  .account-converted-balance, .account-meta-line, .reference-card-label, .reference-card-meta,
+  .reference-card-footer, .bill-copy > span, .activity-desc, .activity-time, .mobile-card-label,
+  .mobile-total-meta, .mobile-total-foot, .mobile-summary-card > span, .mobile-summary-card small,
+  .mobile-activity-copy small, .mobile-upcoming-row small, .field-hint, .plan-manage-row span,
+  .space-card small, .space-notes, .reference-subsection-heading p, .empty-state.compact span,
+  .empty-state span, .settings-row small, .security-note, .onboarding-note { font-size:14px !important; line-height:1.45; }
+  .mobile-activity-copy b, .mobile-upcoming-row b, .mobile-activity-row > strong, .mobile-upcoming-row > strong,
+  .mobile-summary-card strong, .mobile-section-heading h3, .mobile-overview-grid b, .mobile-overview-grid small,
+  .account-detail-name, .bill-copy strong, .reference-card-actions-row .soft-button, .country-filter button,
+  .plan-focus-nav button, .pill, .status-chip { font-size:14px !important; }
+  .eyebrow { font-size:12px; }
+}
+
+/* A quiet scrollbar keeps the page chrome visible without competing with the financial surfaces. */
+* { scrollbar-width:thin; scrollbar-color:rgba(122,114,134,.32) transparent; }
+*::-webkit-scrollbar { width:6px; height:6px; }
+*::-webkit-scrollbar-track { background:transparent; }
+*::-webkit-scrollbar-thumb { border:1px solid transparent; border-radius:999px; background:rgba(122,114,134,.2); background-clip:content-box; }
+*::-webkit-scrollbar-thumb:hover { background:rgba(122,114,134,.42); background-clip:content-box; }
+.desktop-sidebar::-webkit-scrollbar { width:6px; }
+.desktop-sidebar::-webkit-scrollbar-thumb { background:rgba(122,114,134,.2); background-clip:content-box; }
 
 @media (max-width:720px) and (max-height:700px) {
   .auth-shell, .onboarding-shell { align-items:flex-start; padding-top:max(18px, calc(var(--safe-top) + 12px)); }
