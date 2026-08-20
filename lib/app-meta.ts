@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: '2026-08-20',
     title: 'The focused Nett release',
-    commit: 'PENDING',
+    commit: '913bc5d',
     summary: 'Nett now follows the reviewed Base44 product flow end to end while keeping its own calm bento dashboard, lotus identity and country-aware finance model.',
     changes: [
       'Reduced the product to the focused Dashboard, Accounts, Pots, Loans, Holdings, Bills, Spends, Recurring, Budget, Forecast, History and Settings structure, with matching desktop and mobile navigation.',
