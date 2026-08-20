@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.18.0';
+export const APP_VERSION = '1.18.1';
 export const RELEASE_DATE = '2026-08-20';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
@@ -14,6 +14,18 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
+    date: '2026-08-20',
+    title: 'Navigation that stays with you',
+    commit: 'PENDING',
+    summary: 'Moving around Nett now feels instant: the authenticated app stays mounted, preserves its loaded data and updates the URL without flashing or refreshing the whole experience.',
+    changes: [
+      'Replaced full App Router transitions between Nett sections with Next.js-supported shallow browser history navigation.',
+      'Kept the authenticated shell, Supabase session and loaded financial data alive while switching Dashboard, Accounts, Pots, Loans and every other retained section.',
+      'Preserved direct page links plus browser Back and Forward navigation without triggering another full data load.',
+    ],
+  },
+  {
+    version: '1.18.0',
     date: '2026-08-20',
     title: 'The focused Nett release',
     commit: '913bc5d',

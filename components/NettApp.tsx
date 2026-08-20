@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { Route } from 'next';
-import { usePathname, useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import {
   ArrowDownLeft, ArrowUpRight, Bell, BriefcaseBusiness, CalendarClock, Check, ChevronDown,
@@ -274,8 +272,6 @@ function ActivityRow({ transaction, displayCurrency, rates }: { transaction: Tra
 }
 
 export default function NettApp({ initialTab = 'home' }: { initialTab?: NettTab }) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [modal, setModal] = useState<Modal>(null);
   const [data, setData] = useState<NettData>(emptyData);
@@ -388,16 +384,23 @@ export default function NettApp({ initialTab = 'home' }: { initialTab?: NettTab 
   }, []);
 
   useEffect(() => {
-    const matched = (Object.entries(routeForTab).find(([, route]) => route === pathname)?.[0] || initialTab) as NettTab;
-    setTab(matched);
-  }, [pathname, initialTab]);
+    const syncTabFromUrl = () => {
+      const matched = Object.entries(routeForTab).find(([, route]) => route === window.location.pathname)?.[0] as NettTab | undefined;
+      setTab(matched || initialTab);
+      setShowMobileMore(false);
+    };
+    syncTabFromUrl();
+    window.addEventListener('popstate', syncTabFromUrl);
+    return () => window.removeEventListener('popstate', syncTabFromUrl);
+  }, [initialTab]);
 
   function navigateTo(nextTab: Tab) {
-    if (nextTab === 'activity') { router.push(routeForTab.spends as Route); return; }
-    if (nextTab === 'plan') { router.push(routeForTab.forecast as Route); return; }
     if (nextTab === 'more') { setShowMobileMore(true); return; }
-    setTab(nextTab);
-    router.push(routeForTab[nextTab] as Route);
+    const destination = nextTab === 'activity' ? 'spends' : nextTab === 'plan' ? 'forecast' : nextTab;
+    setTab(destination);
+    const route = routeForTab[destination];
+    if (window.location.pathname !== route) window.history.pushState({ nettTab: destination }, '', route);
+    window.scrollTo({ top: 0, behavior: 'auto' });
     setShowMobileMore(false);
   }
 
