@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: APP_VERSION,
     date: '2026-08-20',
     title: 'Navigation that stays with you',
-    commit: 'PENDING',
+    commit: 'acad853',
     summary: 'Moving around Nett now feels instant: the authenticated app stays mounted, preserves its loaded data and updates the URL without flashing or refreshing the whole experience.',
     changes: [
       'Replaced full App Router transitions between Nett sections with Next.js-supported shallow browser history navigation.',
