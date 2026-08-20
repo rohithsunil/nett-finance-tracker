@@ -9,6 +9,7 @@ export const emptyData: NettData = {
     freshness_days: 31,
     enabled_countries: ['AE', 'IN'],
     enabled_currencies: ['AED', 'INR'],
+    count_owed_to_me: false,
   },
   workspaces: [],
   accounts: [],
@@ -25,6 +26,9 @@ export const emptyData: NettData = {
   investmentValues: [],
   forecastScenarios: [],
   budgetLines: [],
+  countries: [],
+  snapshots: [],
+  accountSnapshots: [],
   fxRates: {
     AED_USD: 0.2723,
     USD_AED: 3.6725,

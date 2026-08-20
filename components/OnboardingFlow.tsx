@@ -1,107 +1,71 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { Check, ChevronRight, CircleDollarSign, LoaderCircle, LockKeyhole, Sparkles, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import { Check, ChevronLeft, ChevronRight, LoaderCircle, LockKeyhole, Sparkles, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase/browser';
 import NettLogo from '@/components/NettLogo';
 
 type Props = { email: string; initialName: string; initialCurrency: string; initialWorkspaceId: string | null };
 
-const introSlides = [
-  { eyebrow: 'Welcome', title: 'Your entire financial life, in one calm place.', copy: 'Accounts, savings, loans, investments and bills — brought together without making money feel like work.' },
-  { eyebrow: 'One view', title: 'See everything at a glance.', copy: 'A living net-worth dashboard across all your accounts and holdings, in the currency you choose.' },
-  { eyebrow: 'Save with intention', title: 'Grow your pots, one goal at a time.', copy: 'Keep a car, business, travel or emergency goal separate, so every amount has a job.' },
-  { eyebrow: 'Private by design', title: 'Your numbers stay yours.', copy: 'Your accounts, pots and loans are isolated to your account and protected by row-level security.' },
+const slides = [
+  { eyebrow: 'Welcome', title: 'Your entire financial life, in one calm place.', copy: 'Accounts, pots, loans, holdings and bills — connected without making money feel like work.', icon: Wallet },
+  { eyebrow: 'One view', title: 'See everything at a glance.', copy: 'A living net-worth view across countries and currencies, always grounded in balances you entered.', icon: Sparkles },
+  { eyebrow: 'Save with intention', title: 'Grow your pots, one payment at a time.', copy: 'Keep personal loans and focused spend trackers separate, so every amount remains easy to understand.', icon: Check },
+  { eyebrow: 'Private by design', title: 'Your numbers stay yours.', copy: 'Every record is isolated to your account and protected by Supabase row-level security.', icon: LockKeyhole },
 ];
 
 export default function OnboardingFlow({ email, initialName, initialCurrency, initialWorkspaceId }: Props) {
   const router = useRouter();
-  const [name, setName] = useState(initialName);
-  const [currency, setCurrency] = useState(initialCurrency);
-  const [accountName, setAccountName] = useState('');
-  const [accountType, setAccountType] = useState('current');
-  const [balance, setBalance] = useState('');
-  const [introStep, setIntroStep] = useState(0);
-  const [setup, setSetup] = useState(false);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const slide = slides[step];
+  const Icon = slide.icon;
 
-  async function complete(event?: FormEvent) {
-    event?.preventDefault();
-    setLoading(true); setError('');
+  async function finish() {
+    setLoading(true);
+    setError('');
     const supabase = getSupabaseBrowser();
     if (!supabase) { setError('Supabase is not configured for this deployment.'); setLoading(false); return; }
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.replace('/login?mode=signup'); return; }
 
-    const profileResult = await supabase.from('profiles').upsert({ id: user.id, full_name: name.trim() || user.email?.split('@')[0] || 'Nett member', display_currency: currency }).select('id').single();
-    if (profileResult.error) { setError(profileResult.error.message); setLoading(false); return; }
+    const fullName = initialName.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Nett member';
+    const profile = await supabase.from('profiles').upsert({ id: user.id, full_name: fullName, display_currency: initialCurrency || 'AED' });
+    if (profile.error) { setError(profile.error.message); setLoading(false); return; }
 
-    let workspaceId = initialWorkspaceId;
-    if (!workspaceId) {
-      const { data: workspace } = await supabase.from('workspaces').select('id').eq('user_id', user.id).eq('is_default', true).eq('archived', false).maybeSingle();
-      workspaceId = workspace?.id || null;
-    }
-    if (!workspaceId) {
-      const { data: workspace, error: workspaceError } = await supabase.from('workspaces').insert({ user_id: user.id, name: 'Personal', kind: 'personal', is_default: true }).select('id').single();
-      if (workspaceError || !workspace) { setError(workspaceError?.message || 'Could not create your Personal workspace.'); setLoading(false); return; }
-      workspaceId = workspace.id;
+    if (!initialWorkspaceId) {
+      const existing = await supabase.from('workspaces').select('id').eq('user_id', user.id).eq('archived', false).limit(1).maybeSingle();
+      if (!existing.data) {
+        const created = await supabase.from('workspaces').insert({ user_id: user.id, name: 'Personal', kind: 'personal', is_default: true });
+        if (created.error) { setError(created.error.message); setLoading(false); return; }
+      }
     }
 
-    if (accountName.trim()) {
-      const amount = Number(balance || 0);
-      if (!Number.isFinite(amount) || amount < 0) { setError('Enter a valid starting balance.'); setLoading(false); return; }
-      const { error: accountError } = await supabase.from('accounts').insert({ user_id: user.id, workspace_id: workspaceId, name: accountName.trim(), type: accountType, currency, verified_balance: amount, estimated_balance: amount, balance_verified_at: new Date().toISOString(), include_net_worth: true, include_liquidity: accountType !== 'credit_card' });
-      if (accountError) { setError(accountError.message); setLoading(false); return; }
-    }
-
-    const { error: userError } = await supabase.auth.updateUser({ data: { full_name: name.trim() || user.email?.split('@')[0] || 'Nett member', nett_onboarding_completed: true } });
-    if (userError) { setError(userError.message); setLoading(false); return; }
+    const updated = await supabase.auth.updateUser({ data: { full_name: fullName, nett_onboarding_completed: true } });
+    if (updated.error) { setError(updated.error.message); setLoading(false); return; }
     router.replace('/');
     router.refresh();
   }
 
-  function startSetup() { setError(''); setSetup(true); }
-
-  async function skip() { await complete(); }
-
   return <main className="onboarding-shell">
     <div className="onboarding-glow glow-one" /><div className="onboarding-glow glow-two" />
     <section className="onboarding-card">
-      <div className="onboarding-top"><NettLogo priority /><div className="step-count">{setup ? `${step} of 2` : `${introStep + 1} of 4`}</div></div>
-      <div className="onboarding-progress"><span style={{ width: `${setup ? step * 50 : (introStep + 1) * 25}%` }} /></div>
-      {!setup ? <>
-        <div className="eyebrow"><Sparkles size={14} /> {introSlides[introStep].eyebrow}</div>
-        <div className="onboarding-slide"><h1>{introSlides[introStep].title}</h1><p className="auth-copy">{introSlides[introStep].copy}</p></div>
-        <div className="onboarding-actions"><button type="button" className="onboarding-back" disabled={introStep === 0} onClick={() => setIntroStep((current) => Math.max(0, current - 1))}>Back</button>{introStep === introSlides.length - 1 ? <button type="button" className="primary-button" onClick={startSetup}>Get started <ChevronRight size={16} /></button> : <button type="button" className="primary-button" onClick={() => setIntroStep((current) => Math.min(introSlides.length - 1, current + 1))}>Continue <ChevronRight size={16} /></button>}</div>
-        <button type="button" className="onboarding-skip" onClick={startSetup}>Skip intro</button>
-      </> : step === 1 ? <>
-        <div className="eyebrow"><Sparkles size={14} /> Make Nett yours</div>
-        <h1>Let’s make Nett yours.</h1>
-        <p className="auth-copy">A few details create a useful starting point. You can change everything later.</p>
-        <form className="onboarding-form" onSubmit={(event) => { event.preventDefault(); setError(''); setStep(2); }}>
-          <label>Your name<input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" autoComplete="name" /></label>
-          <label>Primary currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="AED">AED · UAE dirham</option><option value="USD">USD · US dollar</option><option value="INR">INR · Indian rupee</option></select></label>
-          <div className="onboarding-email"><LockKeyhole size={15} /><span>{email}<small>Your account email</small></span></div>
-          <button className="primary-button full">Continue <ChevronRight size={16} /></button>
-        </form>
-      </> : <>
-        <h1>What should we look at first?</h1>
-        <p className="auth-copy">Add one real account so your first Nett view has a meaningful starting point. You can add the rest whenever you’re ready.</p>
-        <form className="onboarding-form" onSubmit={complete}>
-          <label>Account name<input required value={accountName} onChange={(event) => setAccountName(event.target.value)} placeholder="Everyday account" autoComplete="off" /></label>
-          <div className="form-grid"><label>Type<select value={accountType} onChange={(event) => setAccountType(event.target.value)}><option value="current">Current account</option><option value="savings">Savings</option><option value="cash">Cash</option><option value="wallet">Wallet</option><option value="credit_card">Credit card</option></select></label><label>Currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="AED">AED</option><option value="USD">USD</option><option value="INR">INR</option></select></label></div>
-          <label>Verified balance<input required type="number" min="0" step="0.01" value={balance} onChange={(event) => setBalance(event.target.value)} placeholder="0.00" inputMode="decimal" /></label>
-          {error && <div className="form-message"><CircleDollarSign size={16} /> {error}</div>}
-          <button className="primary-button full" disabled={loading}>{loading ? <><LoaderCircle size={16} className="spin" /> Saving your workspace…</> : <><Check size={16} /> Finish setup</>}</button>
-        </form>
-        <button className="onboarding-skip" disabled={loading} onClick={skip}>I’ll add an account later</button>
-        <button className="onboarding-back" disabled={loading} onClick={() => setStep(1)}>Back</button>
-      </>}
-      <div className="onboarding-note"><Wallet size={15} /> Your numbers stay private and are protected by Supabase row-level security.</div>
+      <div className="onboarding-top"><NettLogo priority /><div className="step-count">{step + 1} of {slides.length}</div></div>
+      <div className="onboarding-progress" aria-hidden="true"><span style={{ width: `${(step + 1) * 25}%` }} /></div>
+      <div className="onboarding-illustration"><Icon size={30} strokeWidth={1.7} /></div>
+      <div className="eyebrow"><Sparkles size={14} /> {slide.eyebrow}</div>
+      <div className="onboarding-slide"><h1>{slide.title}</h1><p className="auth-copy">{slide.copy}</p></div>
+      {error && <div className="form-message" role="alert"><LockKeyhole size={16} /> {error}</div>}
+      <div className="onboarding-actions">
+        <button type="button" className="onboarding-back" disabled={step === 0 || loading} onClick={() => setStep((value) => Math.max(0, value - 1))}><ChevronLeft size={16} /> Back</button>
+        {step === slides.length - 1
+          ? <button type="button" className="primary-button" disabled={loading} onClick={() => void finish()}>{loading ? <><LoaderCircle size={16} className="spin" /> Opening Nett…</> : <>Get started <ChevronRight size={16} /></>}</button>
+          : <button type="button" className="primary-button" onClick={() => setStep((value) => Math.min(slides.length - 1, value + 1))}>Continue <ChevronRight size={16} /></button>}
+      </div>
+      {step < slides.length - 1 && <button type="button" className="onboarding-skip" disabled={loading} onClick={() => void finish()}>Skip intro</button>}
+      <div className="onboarding-note"><LockKeyhole size={15} /> Signed in as {email}. Your data is never shared with another Nett user.</div>
     </section>
   </main>;
 }

@@ -12,6 +12,7 @@ export interface Profile {
   freshness_days: number;
   enabled_countries?: CountryCode[] | null;
   enabled_currencies?: Currency[] | null;
+  count_owed_to_me?: boolean;
 }
 
 export interface Workspace {
@@ -38,6 +39,7 @@ export interface Account {
   notes?: string | null;
   archived?: boolean;
   sort_order?: number;
+  ownership_type?: 'personal' | 'business';
 }
 
 export interface Debt {
@@ -107,6 +109,7 @@ export interface Investment {
   latest_value_at?: string | null;
   country_code?: CountryCode | null;
   latest_value_source?: string | null;
+  market?: 'UAE' | 'India' | 'US' | string | null;
 }
 
 export interface Commitment {
@@ -123,6 +126,10 @@ export interface Commitment {
   expected_income?: boolean;
   confidence?: string;
   notes?: string | null;
+  category?: string | null;
+  active?: boolean;
+  day_of_month?: number | null;
+  entry_type?: 'bill' | 'recurring';
 }
 
 export interface Reserve {
@@ -156,6 +163,9 @@ export interface Space {
   allocation?: number | string | null;
   currency: Currency;
   notes?: string | null;
+  kind?: 'pot' | 'spend';
+  tracker_type?: 'cost' | 'business' | 'trip' | null;
+  country_code?: CountryCode | null;
 }
 
 export interface InvestmentValue {
@@ -191,6 +201,38 @@ export interface ForecastScenario {
   month_offset: number;
   country_code?: CountryCode | null;
   notes?: string | null;
+  recurrence?: 'one_time' | 'recurring';
+  duration_months?: number | null;
+  active?: boolean;
+}
+
+export interface CountryConfig {
+  id: string;
+  code: CountryCode;
+  name: string;
+  currency: Currency;
+  sort_order?: number;
+}
+
+export interface Snapshot {
+  id: string;
+  label: string;
+  display_currency: Currency;
+  snapshot_date: string;
+  primary_net_worth: number | string;
+  all_debt_net_worth: number | string;
+  liquid_cash: number | string;
+  safe_to_spend: number | string;
+  payload?: Record<string, unknown> | null;
+}
+
+export interface AccountSnapshot {
+  id: string;
+  account_id: string;
+  balance: number | string;
+  currency: Currency;
+  verified_at: string;
+  fx_rates?: FxRates | null;
 }
 
 export interface BudgetLine {
@@ -204,6 +246,7 @@ export interface BudgetLine {
   currency: Currency;
   country_code?: CountryCode | null;
   notes?: string | null;
+  is_template?: boolean;
 }
 
 export interface FxRates {
@@ -227,6 +270,9 @@ export interface NettData {
   investmentValues: InvestmentValue[];
   forecastScenarios: ForecastScenario[];
   budgetLines: BudgetLine[];
+  countries: CountryConfig[];
+  snapshots: Snapshot[];
+  accountSnapshots: AccountSnapshot[];
   fxRates: FxRates;
   fxRateSource?: string;
   fxRatesUpdatedAt?: string | null;

@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.17.1';
-export const RELEASE_DATE = '2026-08-15';
+export const APP_VERSION = '1.18.0';
+export const RELEASE_DATE = '2026-08-20';
 export const REPOSITORY_URL = 'https://github.com/rohithsunil/nett-finance-tracker';
 
 export type ChangelogEntry = {
@@ -14,7 +14,22 @@ export type ChangelogEntry = {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: APP_VERSION,
-    date: RELEASE_DATE,
+    date: '2026-08-20',
+    title: 'The focused Nett release',
+    commit: 'PENDING',
+    summary: 'Nett now follows the reviewed Base44 product flow end to end while keeping its own calm bento dashboard, lotus identity and country-aware finance model.',
+    changes: [
+      'Reduced the product to the focused Dashboard, Accounts, Pots, Loans, Holdings, Bills, Spends, Recurring, Budget, Forecast, History and Settings structure, with matching desktop and mobile navigation.',
+      'Completed add, edit, delete, status and attached-ledger flows across accounts, pots, loans in both directions, holdings, bills, spend trackers, recurring items, budget plans, forecast scenarios, monthly history and countries.',
+      'Rebuilt the mobile shell around safe areas, a five-item Liquid Glass navigation, Quick Add and More sheets, 44px targets, readable 14px controls and compact debit-card account surfaces.',
+      'Connected recurring money to Budget and Forecast, added planned-versus-actual review, what-if scenarios, monthly snapshots, account country moves and explicit net-worth inclusion controls.',
+      'Added the additive Supabase parity migration and owner-only row-level security for every new preference and country record without deleting existing user data.',
+      'Verified every retained route at phone and desktop widths, all creation dialogs, edit/delete entry points, light/dark/AMOLED contrast, keyboard dismissal, public signup and production-safe empty data.',
+    ],
+  },
+  {
+    version: '1.17.1',
+    date: '2026-08-15',
     title: 'Mobile dashboard visibility and compact accounts',
     commit: 'dd7f8dc',
     summary: 'Safe to Spend now renders reliably on mobile, while Accounts uses a more compact rectangular card density that keeps the full edit surface in view.',

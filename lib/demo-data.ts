@@ -45,5 +45,8 @@ export const demoData: NettData = {
   investmentValues: [],
   forecastScenarios: [],
   budgetLines: [],
+  countries: [],
+  snapshots: [],
+  accountSnapshots: [],
   fxRates: { AED_USD: 0.2723, USD_AED: 3.6725, AED_INR: 22.58, INR_AED: 0.0443, USD_INR: 82.92, INR_USD: 0.0121 },
 };
